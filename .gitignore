@@ -1,0 +1,32 @@
+# Python virtual environment
+.venv/
+
+# Python generated files
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Generated administrative-data case-study artifacts
+data/education_attendance/
+
+# Local SQLite databases
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Spark generated directories/files
+spark-warehouse/
+metastore_db/
+derby.log
+
+# Logs and temporary files
+*.log
+*.tmp
+.DS_Store
+
+# IDE/editor local state
+.vscode/
+.idea/

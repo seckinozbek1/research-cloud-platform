@@ -1,0 +1,6 @@
+data/
+analytical/
+metadata/
+__pycache__/
+*.sqlite
+.git/
