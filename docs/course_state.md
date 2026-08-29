@@ -71,3 +71,25 @@ Conceptual cloud mapping:
 - S3 event → AWS Lambda
 - Cloud Storage event → Google Cloud Function
 - Blob event → Azure Function
+
+## Milestone 3 application progress
+
+APIs + serverless application block completed: 5/5 A.
+
+Verified end-to-end:
+
+- large curated education workload feeds analytical aggregates
+- FastAPI serves district/year analytics
+- deterministic pagination
+- machine-facing client output
+- educator-facing human-readable client output
+- localhost-only development exposure
+- simulated object-storage event trigger
+- metadata registration
+- duplicate-event idempotency
+- missing-object handling
+- irrelevant-event filtering
+
+Next application topic:
+
+Kubernetes — 0/7 A
