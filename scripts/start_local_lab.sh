@@ -4,6 +4,10 @@ set -euo pipefail
 SESSION="research-cloud"
 ROOT="$HOME/research-cloud-platform"
 
+echo "Running interactive preflight..."
+sudo -v
+echo "Sudo authentication ready."
+
 if tmux has-session -t "$SESSION" 2>/dev/null; then
   echo "tmux session '$SESSION' already exists."
   echo "Attach with: tmux attach -t $SESSION"
