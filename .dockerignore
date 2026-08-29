@@ -1,6 +1,13 @@
 data/
 analytical/
 metadata/
-__pycache__/
-*.sqlite
+logs/
+.venv/
+terraform/
 .git/
+.github/
+__pycache__/
+*.pyc
+*.sqlite
+*.tfstate
+*.tfstate.*

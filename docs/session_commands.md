@@ -17,3 +17,29 @@ Note: exact terminal history from earlier course sessions was not preserved.
 From this checkpoint onward, reusable commands and operational procedures
 should be committed to the repository rather than existing only in terminal
 history.
+
+## 2026-08-29 — Terraform introduction
+
+```bash
+terraform version
+mkdir -p terraform
+terraform -chdir=terraform init
+terraform -chdir=terraform fmt
+terraform -chdir=terraform validate
+terraform -chdir=terraform plan
+
+
+### First Terraform lifecycle
+
+terraform -chdir=terraform init
+terraform -chdir=terraform fmt
+terraform -chdir=terraform validate
+terraform -chdir=terraform plan
+terraform -chdir=terraform apply
+kubectl get namespace research-platform
+terraform -chdir=terraform state list
+terraform -chdir=terraform show
+
+Created and managed:
+kubernetes_namespace_v1.research_platform
+

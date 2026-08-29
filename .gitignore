@@ -36,3 +36,13 @@ kubernetes/api-secret.yaml
 
 # Local security hardening runtime state / certificates
 metadata/security/
+
+# Local Terraform runtime/install logs
+metadata/terraform/
+
+# Terraform local runtime
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/crash.log
+terraform/crash.*.log
