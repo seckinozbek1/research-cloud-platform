@@ -1,10 +1,12 @@
 from pathlib import Path
 import json
 import socket
+import time
 
 import pandas as pd
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 
 
 BASE_DIR = Path(__file__).resolve().parents[1]
@@ -29,6 +31,52 @@ app = FastAPI(
     title="Education Attendance Analytics API",
     default_response_class=PrettyJSONResponse,
 )
+
+
+REQUEST_COUNT = Counter(
+    "http_requests_total",
+    "Total HTTP requests",
+    ["method", "path", "status"],
+)
+
+REQUEST_DURATION = Histogram(
+    "http_request_duration_seconds",
+    "HTTP request duration in seconds",
+    ["method", "path"],
+)
+
+
+@app.middleware("http")
+async def collect_http_metrics(request: Request, call_next):
+    start = time.perf_counter()
+
+    response = await call_next(request)
+
+    duration = time.perf_counter() - start
+
+    route = request.scope.get("route")
+    path = getattr(route, "path", request.url.path)
+
+    REQUEST_COUNT.labels(
+        method=request.method,
+        path=path,
+        status=response.status_code,
+    ).inc()
+
+    REQUEST_DURATION.labels(
+        method=request.method,
+        path=path,
+    ).observe(duration)
+
+    return response
+
+
+@app.get("/metrics")
+def prometheus_metrics():
+    return Response(
+        content=generate_latest(),
+        media_type=CONTENT_TYPE_LATEST,
+    )
 
 # Load the small analytical serving layer once when the service starts.
 metrics = pd.read_csv(DATA_PATH)
