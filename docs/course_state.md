@@ -51,3 +51,23 @@ curated national attendance data
 → HTTP/JSON client
 
 Large generated education datasets remain intentionally git-ignored.
+
+### Serverless storage-event simulation
+
+Implemented:
+
+- `src/serverless_register_dataset.py`
+- simulated object-storage event payload with:
+  - bucket
+  - object name
+  - event type
+- `object_created` events register raw datasets in `metadata/metadata.sqlite`
+- irrelevant event types are ignored
+- missing objects return an explicit error
+- repeated delivery is idempotent through the unique dataset path
+
+Conceptual cloud mapping:
+
+- S3 event → AWS Lambda
+- Cloud Storage event → Google Cloud Function
+- Blob event → Azure Function
