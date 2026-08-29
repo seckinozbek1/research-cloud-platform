@@ -89,11 +89,14 @@ tmux send-keys -t "$SESSION:api" \
 
 tmux new-window -t "$SESSION" -n prometheus -c "$ROOT"
 tmux send-keys -t "$SESSION:prometheus" \
-  'docker run --rm --name research-prometheus --network host -v "$PWD/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro" prom/prometheus:latest' C-m
+  'docker run --rm --name research-prometheus --network host -v "$PWD/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro" -v "$PWD/monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro" prom/prometheus:latest' C-m
 
 tmux new-window -t "$SESSION" -n grafana -c "$ROOT"
 tmux send-keys -t "$SESSION:grafana" \
   'docker run --rm --name research-grafana --env-file "$PWD/environment/local_secrets.env" -e GF_AUTH_ANONYMOUS_ENABLED=true -e GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer -e GF_AUTH_ANONYMOUS_ORG_NAME="Main Org." --add-host=host.docker.internal:host-gateway -p 127.0.0.1:3000:3000 -v "$PWD/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro" -v "$PWD/monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro" grafana/grafana:latest' C-m
+
+tmux new-window -t "$SESSION" -n alerts -c "$ROOT"
+tmux send-keys -t "$SESSION:alerts"   './scripts/alert_watcher.sh' C-m
 
 tmux new-window -t "$SESSION" -n client -c "$ROOT"
 tmux send-keys -t "$SESSION:client" \

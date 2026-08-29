@@ -1,0 +1,38 @@
+groups:
+  - name: research-cloud-api-slo
+    rules:
+      - record: research_cloud_api:5xx_ratio:5m
+        expr: |
+          (
+            sum(rate(http_requests_total{status=~"5.."}[5m]))
+            /
+            clamp_min(sum(rate(http_requests_total[5m])), 0.000001)
+          )
+          or vector(0)
+
+      - record: research_cloud_api:p95_latency_seconds:5m
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le) (
+              rate(http_request_duration_seconds_bucket[5m])
+            )
+          )
+
+      - alert: ResearchCloudHigh5xxRate
+        expr: research_cloud_api:5xx_ratio:5m > 0.001
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Research Cloud API 5xx SLO is being violated"
+          description: "5xx ratio has exceeded 0.1% for at least 2 minutes."
+
+      - alert: ResearchCloudHighP95Latency
+        expr: research_cloud_api:p95_latency_seconds:5m > 0.3
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Research Cloud API latency SLO is being violated"
+          description: "p95 latency has exceeded 300 ms for at least 2 minutes."

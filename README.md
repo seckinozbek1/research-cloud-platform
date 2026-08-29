@@ -661,7 +661,58 @@ Administrative credentials remain separate in:
     environment/local_secrets.env
 
 
-## 17. Generate monitoring traffic
+## 17. Local SLO alerting
+
+Prometheus evaluates local reliability rules defined in:
+
+    monitoring/alerts.yml
+
+Current production-like local objectives include:
+
+    5xx error ratio < 0.1%
+    p95 request latency < 300 ms
+
+The latency alert requires the threshold to remain violated for two minutes before firing. This avoids immediately alerting on very short transient spikes.
+
+The local alert lifecycle is:
+
+    normal
+        ↓
+    pending
+        ↓
+    firing
+        ↓
+    resolved
+
+The local lab runs:
+
+    scripts/alert_watcher.sh
+
+in a dedicated tmux window named:
+
+    alerts
+
+The watcher polls the Prometheus alerts API and makes new firing alerts visible instead of requiring the user to continuously inspect Grafana.
+
+When a new alert fires:
+
+- the alert is printed prominently in the `alerts` window
+- the tmux alert message is surfaced
+- the `alerts` window is brought to the foreground
+- repeated polling does not continuously duplicate the same firing notification
+- resolution is printed explicitly when the condition clears
+
+This local mechanism is for the development lab.
+
+In a production environment, notification routing would normally be handled through systems such as Alertmanager and integrations such as email, Slack or incident-management platforms.
+
+The alert pipeline has been tested end to end using a temporary deterministic alert and verified through:
+
+    pending → firing → visible notification → resolved
+
+The temporary test rule is not part of the normal configuration.
+
+## 18. Generate monitoring traffic
 
 To produce visible API traffic locally, use the `client` tmux window.
 
@@ -686,7 +737,7 @@ Note that the current Error Rate dashboard query focuses on server-side `5xx` re
 A `404` is a client-side `4xx` response and therefore does not automatically count as a `5xx` service failure.
 
 
-## 18. One-command local lab
+## 19. One-command local lab
 
 The local environment is orchestrated through:
 
@@ -719,7 +770,7 @@ Known interactive authentication must remain visible.
 Passwords are never embedded into the orchestration script.
 
 
-## 19. tmux terminal layout
+## 20. tmux terminal layout
 
 The local lab creates one tmux session:
 
@@ -788,7 +839,7 @@ or:
 This is deliberate: operational commands should not depend on remembering an invisible terminal role.
 
 
-## 20. Stop the local lab
+## 21. Stop the local lab
 
 Detach from tmux if necessary:
 
@@ -811,7 +862,7 @@ It does NOT imply destruction of:
 Those resources require their own explicit cleanup procedures.
 
 
-## 21. Operational design principles
+## 22. Operational design principles
 
 The local environment follows several rules.
 
@@ -868,7 +919,7 @@ and relevant operational logs.
 They should not become mandatory setup steps for a new user.
 
 
-## 22. Git hygiene
+## 23. Git hygiene
 
 Before committing:
 
@@ -902,7 +953,7 @@ Files that SHOULD normally be committed include:
     documentation
 
 
-## 23. Current development workflow
+## 24. Current development workflow
 
 A typical local development cycle is:
 
@@ -953,7 +1004,7 @@ A typical local development cycle is:
 The monitoring dashboard remains available during local operation so behaviour can be observed while traffic is generated.
 
 
-## 24. Current scope and next stages
+## 25. Current scope and next stages
 
 The repository is still an evolving course platform.
 
