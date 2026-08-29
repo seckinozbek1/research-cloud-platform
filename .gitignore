@@ -48,3 +48,5 @@ terraform/crash.log
 terraform/crash.*.log
 environment/local_secrets.env
 metadata/monitoring/
+
+metadata/recovery-test/
