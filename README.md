@@ -1003,8 +1003,86 @@ A typical local development cycle is:
 
 The monitoring dashboard remains available during local operation so behaviour can be observed while traffic is generated.
 
+## 25. MLOps GIS workflow
 
-## 25. Current scope and next stages
+The first MLOps implementation uses a lightweight geospatial waste-volume forecasting case for a fictional Karşıyaka municipal analytics team.
+
+The learning target is the MLOps lifecycle rather than model sophistication:
+
+    data
+    → train
+    → track
+    → evaluate
+    → version
+    → serve
+    → monitor
+    → retrain
+
+The current GIS and training pipeline is:
+
+    OpenStreetMap Karşıyaka boundary
+    + OpenStreetMap drivable street network
+    + WorldPop 2025 population
+            ↓
+    candidate collection zones
+            ↓
+    population-based service zones
+            ↓
+    spatial features
+            ↓
+    synthetic municipal operations history
+            ↓
+    temporal train/test split
+            ↓
+    naive baseline
+            ↓
+    linear regression
+            ↓
+    MLflow experiment tracking
+
+Generated GIS and training data are reproducible runtime artefacts and are not committed to Git.
+
+Install the MLOps environment dependencies inside the project virtual environment:
+
+    pip install -r requirements.mlops.txt
+
+Generate the spatial base:
+
+    python3 mlops/waste_gis/generate_spatial_base.py
+    python3 mlops/waste_gis/generate_collection_zones.py
+    python3 mlops/waste_gis/build_spatial_features.py
+    python3 mlops/waste_gis/enrich_population.py
+    python3 mlops/waste_gis/build_service_zones.py
+
+Generate the synthetic municipal operations history:
+
+    python3 mlops/waste_gis/generate_operations_history.py
+
+Evaluate the naive reference model:
+
+    python3 mlops/waste_gis/evaluate_baseline.py
+
+Train and track the initial linear model:
+
+    python3 mlops/waste_gis/train_linear_model.py
+
+The local MLflow metadata store uses SQLite:
+
+    mlflow.db
+
+This runtime database is excluded from Git.
+
+Start the local MLflow UI:
+
+    scripts/start_mlflow_local.sh
+
+To open both a specific tracked run and its experiment page:
+
+    scripts/open_mlflow_context.sh <run_id>
+
+The current first-pass model uses a temporal holdout rather than a random split so evaluation more closely resembles future production inference.
+
+## 26. Current scope and next stages
 
 The repository is still an evolving course platform.
 
@@ -1026,12 +1104,12 @@ The current implementation has reached:
 - IAM/security
 - Terraform
 - CI/CD
-- application monitoring in progress
+- monitoring
+- reliability engineering
+- MLOps in progress
 
 Later stages will extend the same platform with:
 
-- reliability engineering
-- MLOps
 - HPC / SLURM
 - MPI
 - GPU computing

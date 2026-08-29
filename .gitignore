@@ -50,3 +50,8 @@ environment/local_secrets.env
 metadata/monitoring/
 
 metadata/recovery-test/
+cache/
+mlruns/
+mlflow.db
+data/gis/
+data/curated/waste_gis/
