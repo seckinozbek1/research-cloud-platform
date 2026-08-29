@@ -33,3 +33,6 @@ derby.log
 
 # Local Kubernetes secrets
 kubernetes/api-secret.yaml
+
+# Local security hardening runtime state / certificates
+metadata/security/

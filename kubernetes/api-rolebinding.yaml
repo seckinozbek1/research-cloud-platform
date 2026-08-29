@@ -1,0 +1,12 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: research-cloud-api-reader
+subjects:
+  - kind: ServiceAccount
+    name: research-cloud-api
+    namespace: default
+roleRef:
+  kind: Role
+  name: research-cloud-api-reader
+  apiGroup: rbac.authorization.k8s.io

@@ -4,8 +4,13 @@ metadata:
   name: research-cloud-api
 spec:
   ingressClassName: cloud-provider-kind
+  tls:
+    - hosts:
+        - research-cloud.local
+      secretName: research-cloud-api-tls
   rules:
-    - http:
+    - host: research-cloud.local
+      http:
         paths:
           - path: /
             pathType: Prefix
