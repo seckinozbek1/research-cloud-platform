@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: research-cloud-api-config
+data:
+  API_ENV: "local-kubernetes"
+  REPORT_TITLE: "District Attendance Summary"

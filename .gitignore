@@ -30,3 +30,6 @@ derby.log
 # IDE/editor local state
 .vscode/
 .idea/
+
+# Local Kubernetes secrets
+kubernetes/api-secret.yaml

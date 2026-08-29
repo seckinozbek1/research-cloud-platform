@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: research-cloud-api
+
+spec:
+  replicas: 3
+
+  selector:
+    matchLabels:
+      app: research-cloud-api
+
+  template:
+    metadata:
+      labels:
+        app: research-cloud-api
+
+    spec:
+      containers:
+        - name: api
+          image: research-cloud-api:local
+          imagePullPolicy: Never
+
+          envFrom:
+            - configMapRef:
+                name: research-cloud-api-config
+          env:
+            - name: DEMO_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: research-cloud-api-secret
+                  key: DEMO_API_TOKEN
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "64Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+          ports:
+            - containerPort: 8000
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 2
+            periodSeconds: 5
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10

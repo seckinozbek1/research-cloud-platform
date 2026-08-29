@@ -1,0 +1,16 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: research-cloud-api
+spec:
+  ingressClassName: cloud-provider-kind
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: research-cloud-api
+                port:
+                  number: 8000

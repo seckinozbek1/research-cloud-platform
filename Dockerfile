@@ -1,7 +1,13 @@
 FROM python:3.12-slim
 
-WORKDIR /workspace
+WORKDIR /app
 
-COPY src/run_pipeline.py /opt/pipeline/run_pipeline.py
+COPY requirements.lock.txt .
+RUN pip install --no-cache-dir -r requirements.lock.txt
 
-CMD ["python", "/opt/pipeline/run_pipeline.py"]
+COPY src/api.py ./src/api.py
+COPY serving/education_attendance ./serving/education_attendance
+
+EXPOSE 8000
+
+CMD ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,5 +1,6 @@
 from pathlib import Path
 import json
+import socket
 
 import pandas as pd
 from fastapi import FastAPI, HTTPException
@@ -9,9 +10,8 @@ from fastapi.responses import JSONResponse
 BASE_DIR = Path(__file__).resolve().parents[1]
 DATA_PATH = (
     BASE_DIR
-    / "data"
+    / "serving"
     / "education_attendance"
-    / "analytics"
     / "district_year_attendance_metrics.csv"
 )
 
@@ -86,6 +86,13 @@ def format_records(dataframe: pd.DataFrame) -> list[dict]:
         format_record(row)
         for row in dataframe.to_dict(orient="records")
     ]
+
+
+@app.get("/whoami")
+def whoami():
+    return {
+        "pod": socket.gethostname(),
+    }
 
 
 @app.get("/health")
