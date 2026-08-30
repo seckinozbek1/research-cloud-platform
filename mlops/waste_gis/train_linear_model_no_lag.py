@@ -27,18 +27,24 @@ RUN_NAME = "linear-regression-no-lag-reproducible-v1"
 
 TEST_DAYS = 30
 
+FEATURE_SPEC_PATH = (
+    PROJECT_ROOT
+    / "mlops"
+    / "waste_gis"
+    / "feature_store"
+    / "feature_spec.json"
+)
+
+FEATURE_SPEC = json.loads(
+    FEATURE_SPEC_PATH.read_text()
+)
+
 FEATURES = [
-    "population_2025",
-    "population_density_2025",
-    "road_density_km_per_km2",
-    "container_capacity_kg",
-    "days_since_last_pickup",
-    "weekend",
-    "temperature_c",
-    "rain_mm",
+    feature["name"]
+    for feature in FEATURE_SPEC["features"]
 ]
 
-TARGET = "waste_kg"
+TARGET = FEATURE_SPEC["target"]
 
 
 def sha256_file(path: Path) -> str:

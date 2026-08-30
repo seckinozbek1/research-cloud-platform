@@ -22,11 +22,11 @@
     },
     {
       "name": "days_since_last_pickup",
-      "dtype": "float64"
+      "dtype": "int64"
     },
     {
       "name": "weekend",
-      "dtype": "float64"
+      "dtype": "int64"
     },
     {
       "name": "temperature_c",
