@@ -1005,9 +1005,10 @@ The monitoring dashboard remains available during local operation so behaviour c
 
 ## 25. MLOps GIS workflow
 
-The first MLOps implementation uses a lightweight geospatial waste-volume forecasting case for a fictional Karşıyaka municipal analytics team.
+The first MLOps implementation uses a geospatial municipal waste-demand case
+for a fictional Karşıyaka municipal analytics team.
 
-The learning target is the MLOps lifecycle rather than model sophistication:
+The learning target remains the MLOps lifecycle rather than model sophistication:
 
     data
     → train
@@ -1018,20 +1019,62 @@ The learning target is the MLOps lifecycle rather than model sophistication:
     → monitor
     → retrain
 
-The current GIS and training pipeline is:
+The case has evolved from the initial coarse prototype into a 100 m
+brownfield municipal operations substrate.
 
-    OpenStreetMap Karşıyaka boundary
-    + OpenStreetMap drivable street network
-    + WorldPop 2025 population
+Current spatial and operational architecture:
+
+    real Karşıyaka administrative boundary
+    + OSM drivable road network
+    + WorldPop 2025 100 m population raster
+    + OSM POI / activity context
             ↓
-    candidate collection zones
+    100 m demand cells
             ↓
-    population-based service zones
+    synthetic existing infrastructure
+        1,200 physical bins
+        858 collection points
+        3 hubs
+        12 trucks
             ↓
-    spatial features
+    dynamic operating context
+        vehicle-specific travel speeds
+        rush-hour traffic
+        roadworks
+        temporary closures
+        event congestion
+        rain
+        crew availability
+        breaks and shifts
+        maintenance
+        vehicle faults and breakdowns
             ↓
-    synthetic municipal operations history
+    generated waste demand
             ↓
+    baseline scheduler
+            ↓
+    utility-service scheduler
+
+Permanent hubs and collection points are snapped to the largest strongly
+connected component of the directed driving network so permanent
+infrastructure is not created on disconnected OSM graph fragments.
+
+Waste collection is treated as a public utility obligation. Priority points
+have a maximum 24-hour service interval, standard points a maximum 48-hour
+interval, and imminent overflow creates a same-day service obligation.
+Worker breaks and safe working-time constraints remain hard constraints.
+
+Detailed operations-research optimization is intentionally deferred until
+after the first MLOps lifecycle. The deferred work is documented in:
+
+    docs/waste_gis_optimization_backlog.md
+
+The current ML model is still a deliberately simple first-pass demand
+forecasting model. It exists to teach the lifecycle and is not yet the final
+100 m exogenous-demand model used by the later optimization system.
+
+Current MLOps components:
+
     temporal train/test split
             ↓
     naive baseline
@@ -1039,34 +1082,68 @@ The current GIS and training pipeline is:
     linear regression
             ↓
     MLflow experiment tracking
+            ↓
+    Logged Model artifact
+            ↓
+    Model Registry
+        waste-demand-forecast
+        candidate alias
+            ↓
+    reproducibility metadata
+        training-data SHA256
+        feature list
+        temporal cutoff
+        train/test row counts
+        Git commit
+        dependency environment
+            ↓
+    local feature-store pattern
 
-Generated GIS and training data are reproducible runtime artefacts and are not committed to Git.
+The registered candidate currently points to the reproducible model version.
+Registry state itself is stored in the local MLflow SQLite database and is not
+committed to Git.
 
-Install the MLOps environment dependencies inside the project virtual environment:
+Generated GIS, model-runtime, feature-table, and simulation outputs are
+reproducible runtime artefacts and are not committed to Git.
+
+Install the MLOps environment dependencies inside the project virtual
+environment:
 
     pip install -r requirements.mlops.txt
 
-Generate the spatial base:
+Key spatial-data preparation scripts include:
 
     python3 mlops/waste_gis/generate_spatial_base.py
     python3 mlops/waste_gis/generate_collection_zones.py
     python3 mlops/waste_gis/build_spatial_features.py
     python3 mlops/waste_gis/enrich_population.py
-    python3 mlops/waste_gis/build_service_zones.py
+    python3 mlops/waste_gis/build_activity_features.py
 
-Generate the synthetic municipal operations history:
+Key operational-substrate scripts include:
 
-    python3 mlops/waste_gis/generate_operations_history.py
+    python3 mlops/waste_gis/generate_existing_infrastructure.py
+    python3 mlops/waste_gis/build_dynamic_traffic_state.py
+    python3 mlops/waste_gis/build_hub_bin_travel_matrix.py
+    python3 mlops/waste_gis/generate_daily_operational_state.py
+    python3 mlops/waste_gis/build_bin_demand_baseline.py
+    python3 mlops/waste_gis/build_collection_points.py
+    python3 mlops/waste_gis/prepare_scheduler_inputs.py
+    python3 mlops/waste_gis/build_utility_service_policy.py
 
-Evaluate the naive reference model:
+Simulation scripts:
 
-    python3 mlops/waste_gis/evaluate_baseline.py
+    python3 mlops/waste_gis/simulate_baseline_operations.py
+    python3 mlops/waste_gis/simulate_utility_operations.py
 
-Train and track the initial linear model:
+The first-pass reproducible ML training entry point is:
 
-    python3 mlops/waste_gis/train_linear_model.py
+    python3 mlops/waste_gis/train_linear_model_no_lag.py
 
-The local MLflow metadata store uses SQLite:
+The local feature-table materialization entry point is:
+
+    python3 mlops/waste_gis/feature_store/materialize_features.py
+
+The local MLflow metadata store uses:
 
     mlflow.db
 
@@ -1076,15 +1153,27 @@ Start the local MLflow UI:
 
     scripts/start_mlflow_local.sh
 
-To open both a specific tracked run and its experiment page:
+Open a specific tracked run and its experiment context:
 
     scripts/open_mlflow_context.sh <run_id>
 
-The current first-pass model uses a temporal holdout rather than a random split so evaluation more closely resembles future production inference.
+The current first-pass model uses a temporal holdout rather than a random split
+so evaluation more closely resembles future production inference.
 
 ## 26. Current scope and next stages
 
 The repository is still an evolving course platform.
+
+The expanded waste-GIS operations and optimization work is intentionally
+paused while the first MLOps lifecycle is completed. The deferred analysis
+and optimization plan is recorded in
+`docs/waste_gis_optimization_backlog.md`.
+
+The expanded waste-GIS operations and optimization work is intentionally
+paused while the first MLOps lifecycle is completed. The deferred analysis
+and optimization plan is recorded in
+`docs/waste_gis_optimization_backlog.md`.
+
 
 The current implementation has reached:
 

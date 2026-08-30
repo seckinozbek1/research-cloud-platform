@@ -55,3 +55,5 @@ mlruns/
 mlflow.db
 data/gis/
 data/curated/waste_gis/
+
+metadata/waste_gis_training_metadata.json

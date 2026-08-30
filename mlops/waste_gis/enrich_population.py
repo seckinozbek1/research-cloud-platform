@@ -1,152 +1,98 @@
 from pathlib import Path
-import time
 
 import geopandas as gpd
-import requests
-from shapely.geometry import mapping
+from rasterstats import zonal_stats
+from tqdm import tqdm
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
-FEATURES_PATH = (
-    PROJECT_ROOT / "data" / "gis" / "karsiyaka_zone_features.geojson"
+CELLS_PATH = (
+    PROJECT_ROOT / "data" / "gis" / "karsiyaka_collection_zones.geojson"
+)
+
+WORLDPOP_PATH = (
+    PROJECT_ROOT
+    / "data"
+    / "gis"
+    / "worldpop"
+    / "tur_pop_2025_CN_100m_R2025A_v1.tif"
 )
 
 OUTPUT_PATH = (
     PROJECT_ROOT / "data" / "gis" / "karsiyaka_zone_population.geojson"
 )
 
-SUBMIT_URL = "https://api.worldpop.org/v2/population"
-TASK_URL = "https://api.worldpop.org/v2/tasks/{task_id}"
-
-YEAR = 2025
-RESOLUTION = "100m"
-
-POLL_INTERVAL_SECONDS = 1
-MAX_POLLS = 60
+CHUNK_SIZE = 250
+POPULATION_SOURCE = "worldpop_R2025A_2025_100m"
 
 
-def submit_population_task(session, geometry):
-    payload = {
-        "geojson": mapping(geometry),
-        "year": YEAR,
-        "resolution": RESOLUTION,
-    }
+def main() -> None:
+    cells = gpd.read_file(CELLS_PATH)
 
-    response = session.post(
-        SUBMIT_URL,
-        json=payload,
-        timeout=60,
-    )
-    response.raise_for_status()
+    population = []
 
-    data = response.json()
+    chunks = [
+        cells.iloc[i:i + CHUNK_SIZE]
+        for i in range(0, len(cells), CHUNK_SIZE)
+    ]
 
-    if "task_id" not in data:
-        raise RuntimeError(
-            f"WorldPop submission did not return task_id: {data}"
+    for chunk in tqdm(
+        chunks,
+        desc="WorldPop cells",
+        unit="chunk",
+    ):
+        stats = zonal_stats(
+            chunk.geometry,
+            WORLDPOP_PATH,
+            stats=["sum"],
+            nodata=-99999.0,
+            all_touched=False,
         )
 
-    return data["task_id"]
+        for result in stats:
+            value = result.get("sum")
 
+            if value is None:
+                population.append(0.0)
+            else:
+                population.append(max(float(value), 0.0))
 
-def wait_for_result(session, task_id):
-    url = TASK_URL.format(task_id=task_id)
+    cells["population_2025"] = population
 
-    for _ in range(MAX_POLLS):
-        response = session.get(url, timeout=60)
-        response.raise_for_status()
-
-        data = response.json()
-        status = data.get("status")
-
-        if status == "success":
-            return data["result"]
-
-        if status in {"failed", "error"}:
-            raise RuntimeError(
-                f"WorldPop task {task_id} failed: {data}"
-            )
-
-        time.sleep(POLL_INTERVAL_SECONDS)
-
-    raise TimeoutError(
-        f"WorldPop task {task_id} did not complete after "
-        f"{MAX_POLLS} polls."
+    cells["population_density_2025"] = (
+        cells["population_2025"]
+        / cells["area_km2"]
     )
 
+    cells["population_source"] = POPULATION_SOURCE
 
-def main():
-    zones = gpd.read_file(FEATURES_PATH)
-
-    population_values = []
-    population_density_values = []
-    worldpop_area_values = []
-
-    session = requests.Session()
-
-    total = len(zones)
-
-    for number, (_, zone) in enumerate(zones.iterrows(), start=1):
-        zone_id = zone["zone_id"]
-
-        print(f"[{number:02d}/{total}] {zone_id}: submitting...")
-
-        task_id = submit_population_task(
-            session,
-            zone.geometry,
-        )
-
-        result = wait_for_result(
-            session,
-            task_id,
-        )
-
-        population = float(result["total_population"])
-        density = float(result["population_density"])
-        area_km2 = float(result["area_km2"])
-
-        population_values.append(population)
-        population_density_values.append(density)
-        worldpop_area_values.append(area_km2)
-
-        print(
-            f"         population={population:.0f}, "
-            f"density={density:.0f}/km²"
-        )
-
-    zones["population_2025"] = population_values
-    zones["population_density_2025"] = population_density_values
-    zones["worldpop_area_km2"] = worldpop_area_values
-    zones["population_source"] = "worldpop_R2025A_2025_100m"
-
-    zones.to_file(
+    cells.to_file(
         OUTPUT_PATH,
         driver="GeoJSON",
     )
 
     print()
-    print("Population enrichment completed.")
-    print(f"Zones              : {len(zones):,}")
+    print("Local WorldPop enrichment completed.")
+    print(f"Cells                : {len(cells):,}")
     print(
-        f"Population total   : "
-        f"{zones['population_2025'].sum():,.0f}"
+        f"Population total     : "
+        f"{cells['population_2025'].sum():,.0f}"
     )
     print(
-        f"Population range   : "
-        f"{zones['population_2025'].min():,.0f}–"
-        f"{zones['population_2025'].max():,.0f}"
+        f"Populated cells      : "
+        f"{(cells['population_2025'] > 0).sum():,}"
     )
     print(
-        f"Density range      : "
-        f"{zones['population_density_2025'].min():,.0f}–"
-        f"{zones['population_density_2025'].max():,.0f} /km²"
+        f"Zero-population cells: "
+        f"{(cells['population_2025'] == 0).sum():,}"
     )
     print(
-        f"Median density     : "
-        f"{zones['population_density_2025'].median():,.0f} /km²"
+        f"Population range     : "
+        f"{cells['population_2025'].min():,.1f}–"
+        f"{cells['population_2025'].max():,.1f}"
     )
-    print(f"Output             : {OUTPUT_PATH}")
+    print(f"Output               : {OUTPUT_PATH}")
 
 
 if __name__ == "__main__":

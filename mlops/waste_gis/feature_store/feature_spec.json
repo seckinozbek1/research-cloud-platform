@@ -1,0 +1,44 @@
+{
+  "feature_set": "waste-demand-v1",
+  "entity": "zone_id",
+  "timestamp": "collection_date",
+  "target": "waste_kg",
+  "features": [
+    {
+      "name": "population_2025",
+      "dtype": "float64"
+    },
+    {
+      "name": "population_density_2025",
+      "dtype": "float64"
+    },
+    {
+      "name": "road_density_km_per_km2",
+      "dtype": "float64"
+    },
+    {
+      "name": "container_capacity_kg",
+      "dtype": "float64"
+    },
+    {
+      "name": "days_since_last_pickup",
+      "dtype": "float64"
+    },
+    {
+      "name": "weekend",
+      "dtype": "float64"
+    },
+    {
+      "name": "temperature_c",
+      "dtype": "float64"
+    },
+    {
+      "name": "rain_mm",
+      "dtype": "float64"
+    }
+  ],
+  "notes": {
+    "scope": "First-pass local feature-store pattern for MLOps learning.",
+    "technical_debt": "container_capacity_kg and days_since_last_pickup mix operational state with demand forecasting. A later demand-model revision should forecast exogenous waste generation independently of service decisions."
+  }
+}
