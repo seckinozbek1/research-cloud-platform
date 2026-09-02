@@ -1,0 +1,14 @@
+{
+  "mode": "single-cuda",
+  "world_size": 1,
+  "device": "cuda",
+  "epochs": 200,
+  "global_batch_size": 512,
+  "train_rows": 4050,
+  "test_rows": 810,
+  "wall_seconds": 8.435427853000874,
+  "training_rows_per_second": 96023.58221958419,
+  "mae": 4208.15576171875,
+  "rmse": 5726.560546875,
+  "r2": 0.866123616695404
+}

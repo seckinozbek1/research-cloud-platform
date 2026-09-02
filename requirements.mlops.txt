@@ -1,0 +1,12 @@
+geopandas==1.1.4
+mlflow==3.15.2
+numpy
+osmnx==2.1.1
+pandas==3.0.5
+requests
+scikit-learn==1.9.0
+shapely==2.1.2
+tqdm==4.70.0
+rasterio==1.5.1
+rasterstats==0.21.0
+pyarrow==25.0.1

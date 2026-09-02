@@ -1,0 +1,24 @@
+{
+  "mode": "fsdp_style_parameter_sharding",
+  "world_size": 2,
+  "epochs": 100,
+  "total_model_parameters": 26113,
+  "shard_size": 13057,
+  "wall_seconds": 5.264645372999439,
+  "workers": [
+    {
+      "rank": 0,
+      "actual_owned_parameters": 13057,
+      "persistent_shard_elements": 13057,
+      "total_model_parameters": 26113,
+      "persistent_parameter_share": 0.5000191475510283
+    },
+    {
+      "rank": 1,
+      "actual_owned_parameters": 13056,
+      "persistent_shard_elements": 13057,
+      "total_model_parameters": 26113,
+      "persistent_parameter_share": 0.5000191475510283
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "mode": "ddp-2-cpu",
+  "world_size": 2,
+  "device": "cpu",
+  "epochs": 200,
+  "global_batch_size": 512,
+  "train_rows": 4050,
+  "test_rows": 810,
+  "wall_seconds": 4.592825575999086,
+  "training_rows_per_second": 176362.02085114003,
+  "mae": 4225.0634765625,
+  "rmse": 5723.7646484375,
+  "r2": 0.8662543296813965
+}

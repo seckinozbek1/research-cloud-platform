@@ -50,3 +50,43 @@ environment/local_secrets.env
 metadata/monitoring/
 
 metadata/recovery-test/
+cache/
+mlruns/
+mlflow.db
+data/gis/
+data/curated/waste_gis/
+
+metadata/waste_gis_training_metadata.json
+
+# Governance runtime/generated outputs
+governance/data_catalog.csv
+governance/data_catalog_enriched.csv
+governance/data_catalog_governed.csv
+governance/privacy_profile.csv
+governance/lineage_events.jsonl
+
+# Privacy-transformed data
+data/curated_privacy_safe/
+
+# ---------------------------------------------------------
+# Generated course/runtime artifacts
+# ---------------------------------------------------------
+
+# Distributed ML runtime metrics
+artifacts/distributed_ml/ray-2cpu-training_metrics.json
+
+# FinOps generated/runtime pricing outputs
+finops/cloud_price_catalog.json
+finops/compute_cost_band.json
+finops/storage_cost_band.json
+finops/waste_gis_finops_report.json
+
+# Hybrid runtime decisions and telemetry profiles
+hybrid/adaptive_placement_decision.json
+hybrid/capacity_decision.json
+hybrid/hybrid_execution_plan.json
+hybrid/local_server_vs_cloud.json
+hybrid/workload_profiles/
+
+# Enterprise machine-readable generated snapshot
+enterprise/architecture_snapshot.json
