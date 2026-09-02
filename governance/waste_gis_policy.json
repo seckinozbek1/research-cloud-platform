@@ -1,0 +1,37 @@
+{
+  "scope": "waste_gis",
+
+  "retention": {
+    "operational_state": "90_days",
+    "simulation_outputs": "project_lifetime",
+    "model_artifacts": "project_lifetime",
+    "raw_geospatial_sources": "source_lifecycle"
+  },
+
+  "minimisation": {
+    "allowed_temporal_fields": [
+      "date",
+      "time",
+      "pickup_time",
+      "shift_start",
+      "shift_end"
+    ],
+
+    "restricted_operational_fields": [
+      "driver_name",
+      "crew_name",
+      "employee_name",
+      "phone",
+      "email",
+      "home_address"
+    ]
+  },
+
+  "deployment_gate": {
+    "require_metadata": true,
+    "require_privacy_scan": true,
+    "allow_potentially_personal": true,
+    "block_restricted_review": true,
+    "require_current_lineage": true
+  }
+}

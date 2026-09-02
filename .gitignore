@@ -57,3 +57,13 @@ data/gis/
 data/curated/waste_gis/
 
 metadata/waste_gis_training_metadata.json
+
+# Governance runtime/generated outputs
+governance/data_catalog.csv
+governance/data_catalog_enriched.csv
+governance/data_catalog_governed.csv
+governance/privacy_profile.csv
+governance/lineage_events.jsonl
+
+# Privacy-transformed data
+data/curated_privacy_safe/

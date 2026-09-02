@@ -1,0 +1,62 @@
+{
+  "policy_version": "2.0",
+
+  "project_defaults": {
+    "data_owner": "research-cloud-platform",
+    "data_steward": "project_maintainer"
+  },
+
+  "layer_rules": {
+    "raw": {
+      "source": "external_or_original_input",
+      "authoritative": "source",
+      "retention_policy": "review_required"
+    },
+
+    "processed": {
+      "source": "derived_project_data",
+      "authoritative": "derived",
+      "retention_policy": "project_lifetime"
+    },
+
+    "curated": {
+      "source": "derived_project_data",
+      "authoritative": "curated_candidate",
+      "retention_policy": "project_lifetime"
+    },
+
+    "gis": {
+      "source": "geospatial_source_or_derived",
+      "authoritative": "source_or_derived",
+      "retention_policy": "project_lifetime"
+    },
+
+    "artifact": {
+      "source": "generated_project_artifact",
+      "authoritative": "experiment_or_operational_artifact",
+      "retention_policy": "project_lifetime"
+    },
+
+    "other": {
+      "source": "inferred_from_repository",
+      "authoritative": "review_required",
+      "retention_policy": "review_required"
+    }
+  },
+
+  "privacy_policy": {
+    "structured_extensions": [
+      ".csv",
+      ".parquet",
+      ".json",
+      ".geojson"
+    ],
+
+    "default_structured_status": "pending_privacy_scan",
+    "default_unstructured_status": "review_required"
+  },
+
+  "quality_policy": {
+    "default_status": "not_checked"
+  }
+}

@@ -478,3 +478,50 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+    # --------------------------------------------------
+    # Adaptive lineage recording.
+    #
+    # DDP launches multiple processes, so only rank 0
+    # writes the lineage event.
+    # --------------------------------------------------
+    import os
+    import sys
+
+    from pathlib import Path
+
+    if int(os.environ.get("RANK", "0")) == 0:
+
+        project_root = (
+            Path(__file__)
+            .resolve()
+            .parents[2]
+        )
+
+        if str(project_root) not in sys.path:
+            sys.path.insert(
+                0,
+                str(project_root),
+            )
+
+        from governance.lineage import (
+            record_lineage,
+        )
+
+        record_lineage(
+            inputs=[
+                "data/curated/waste_gis/waste_operations.csv",
+            ],
+            outputs=[
+                "artifacts/distributed_ml/ddp-2-cpu_metrics.json",
+            ],
+            transformation=__file__,
+            metadata={
+                "pipeline": "distributed_ml",
+                "framework": "pytorch_ddp",
+            },
+        )
+
+        print(
+            "Lineage event recorded."
+        )
