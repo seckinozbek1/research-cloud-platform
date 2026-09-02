@@ -1,0 +1,14 @@
+{
+  "waste_gis_ddp": {
+    "cloud_required": false
+  },
+  "waste_gis_temporary_overflow": {
+    "cloud_required": false,
+    "temporary_excess": true
+  },
+  "waste_gis_sustained_overflow": {
+    "cloud_required": false,
+    "temporary_excess": false,
+    "sustained_high_load": true
+  }
+}
