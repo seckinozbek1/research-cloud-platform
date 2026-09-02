@@ -17,8 +17,67 @@ The primary development environment is:
         ↓
     ~/research-cloud-platform
 
-Project files are intentionally kept in the WSL Linux filesystem rather than
-under /mnt/c/.
+The canonical checkout on the primary development workstation is:
+
+Windows:
+
+    C:\Users\secki\local\research-cloud-platform
+
+WSL view:
+
+    /mnt/c/Users/secki/local/research-cloud-platform
+
+This project previously used the WSL-native Linux filesystem. It was moved to a
+single Windows-local location to make the repository easier to locate and manage
+consistently across Windows and WSL.
+
+The trade-off is explicit: WSL-native storage can provide better Linux I/O
+performance for some file-intensive workloads. Performance-sensitive temporary
+data or runtime state may therefore still be placed on Linux-native storage when
+there is a measured reason to do so.
+
+
+### Canonical source vs Linux-native runtime
+
+The canonical Git checkout and source tree live at:
+
+Windows:
+
+    C:\Users\secki\local\research-cloud-platform
+
+WSL:
+
+    /mnt/c/Users/secki/local/research-cloud-platform
+
+Performance-sensitive execution state is kept separately in the WSL-native
+Linux filesystem:
+
+    /home/seckinozbek/research-cloud-runtime
+
+This directory is not a second Git checkout.
+
+The distinction is deliberate:
+
+    source / Git / configuration
+        → Windows-local canonical repository
+
+    Python virtual environment
+    caches
+    temporary files
+    Spark local / shuffle state
+    Ray temporary state
+    MLflow runtime state
+    large intermediate outputs
+    HPC / distributed-computing scratch
+        → WSL-native runtime storage
+
+Source locality, compute locality and data/runtime locality are therefore
+treated as separate architectural decisions.
+
+Enter the configured local runtime with:
+
+    cd /mnt/c/Users/secki/local/research-cloud-platform
+    bash scripts/enter_runtime.sh
 
 The project began as a local data and API platform and progressively expanded
 into a broader research-computing and enterprise architecture.
@@ -144,11 +203,20 @@ Do not place GitHub private keys or other credentials in this repository.
 
 ## 2. Clone the repository
 
-Clone into the WSL Linux filesystem:
+On the primary development workstation, clone into the canonical local
+directory:
 
-    cd ~
-    git clone git@github.com:seckinozbek1/research-cloud-platform.git
-    cd research-cloud-platform
+    mkdir -p /mnt/c/Users/secki/local
+
+    git clone \
+      git@github.com:seckinozbek1/research-cloud-platform.git \
+      /mnt/c/Users/secki/local/research-cloud-platform
+
+    cd /mnt/c/Users/secki/local/research-cloud-platform
+
+On Windows, the same directory is:
+
+    C:\Users\secki\local\research-cloud-platform
 
 Use the repository's default branch for the stable version of the platform.
 
@@ -820,7 +888,7 @@ The design goal is that the user should not have to manually remember which term
 
 Start:
 
-    cd ~/research-cloud-platform
+    cd /mnt/c/Users/secki/local/research-cloud-platform
     ./scripts/start_local_lab.sh
 
 The script performs the local operational startup, including:
