@@ -1,0 +1,13 @@
+{
+  "mode":"cpu_gpu_model_parallel",
+  "train_rows":4050,
+  "test_rows":810,
+  "epochs":200,
+  "batch_size":512,
+  "wall_seconds":10.258211332,
+  "mae":3095.3361816406,
+  "rmse":4485.2732358241,
+  "r2":0.9178714752,
+  "stage_1_device":"cpu",
+  "stage_2_device":"cuda:0"
+}

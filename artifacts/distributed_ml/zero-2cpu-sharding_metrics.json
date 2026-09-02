@@ -1,0 +1,21 @@
+{
+  "mode": "zero_optimizer_sharding",
+  "world_size": 2,
+  "epochs": 100,
+  "wall_seconds": 7.357922048000546,
+  "total_model_parameters": 26113,
+  "workers": [
+    {
+      "rank": 0,
+      "optimizer_owned_parameters": 16384,
+      "total_model_parameters": 26113,
+      "optimizer_parameter_share": 0.6274269520928273
+    },
+    {
+      "rank": 1,
+      "optimizer_owned_parameters": 9729,
+      "total_model_parameters": 26113,
+      "optimizer_parameter_share": 0.37257304790717266
+    }
+  ]
+}
