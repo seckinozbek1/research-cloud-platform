@@ -36,6 +36,49 @@ performance for some file-intensive workloads. Performance-sensitive temporary
 data or runtime state may therefore still be placed on Linux-native storage when
 there is a measured reason to do so.
 
+
+### Canonical source vs Linux-native runtime
+
+The canonical Git checkout and source tree live at:
+
+Windows:
+
+    C:\Users\secki\local\research-cloud-platform
+
+WSL:
+
+    /mnt/c/Users/secki/local/research-cloud-platform
+
+Performance-sensitive execution state is kept separately in the WSL-native
+Linux filesystem:
+
+    /home/seckinozbek/research-cloud-runtime
+
+This directory is not a second Git checkout.
+
+The distinction is deliberate:
+
+    source / Git / configuration
+        → Windows-local canonical repository
+
+    Python virtual environment
+    caches
+    temporary files
+    Spark local / shuffle state
+    Ray temporary state
+    MLflow runtime state
+    large intermediate outputs
+    HPC / distributed-computing scratch
+        → WSL-native runtime storage
+
+Source locality, compute locality and data/runtime locality are therefore
+treated as separate architectural decisions.
+
+Enter the configured local runtime with:
+
+    cd /mnt/c/Users/secki/local/research-cloud-platform
+    ./scripts/enter_runtime.sh
+
 The project began as a local data and API platform and progressively expanded
 into a broader research-computing and enterprise architecture.
 
