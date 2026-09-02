@@ -1790,3 +1790,72 @@ not presented as a universal autonomous cloud provisioner.
 
 Future work can therefore focus on real applications, operational automation and
 new research workloads rather than extending a checklist of course topics.
+
+## Local Operations Meta-Agent
+
+An experimental case-agnostic Operations Meta-Agent extends the platform with
+a local LLM reasoning layer over deterministic infrastructure controls.
+
+The architecture deliberately separates LLM reasoning from operational
+authority:
+
+    user request
+        |
+        v
+    local Qwen meta-agent
+        |
+        +--> inspect_environment()
+        +--> inspect_workload()
+        +--> inspect_policy()
+        |
+        v
+    deterministic placement adapter
+        |
+        v
+    existing hybrid/adaptive_placement.py
+        |
+        v
+    validated operational decision
+
+The LLM may select tools and explain evidence, but its prose is not treated as
+an authoritative placement decision. Missing operational facts remain UNKNOWN.
+
+Current validated routing includes:
+
+- `LOCAL_PC`
+- `CLOUD_BURST`
+- `FULL_CLOUD_ON_DEMAND_OR_SPOT`
+- `FULL_OR_COMMITTED_CLOUD`
+- `LOCAL_LINUX_SERVER_VS_COMMITTED_CLOUD`
+- explicit `POLICY_INPUT_REQUIRED:*` states
+
+The initial agent is read-only. It does not provision cloud infrastructure,
+delete resources, modify infrastructure, or execute arbitrary shell commands.
+
+### Two-terminal local workflow
+
+The development workflow intentionally uses two terminals.
+
+**PROMPT**
+
+Used for Git, Python, tests, agent interaction and normal repository work:
+
+    cd /mnt/c/Users/secki/local/research-cloud-platform
+    bash scripts/enter_runtime.sh
+
+**DEVOPS QWEN**
+
+Used only for the local Qwen inference server and its GPU/runtime logs:
+
+    cd /mnt/c/Users/secki/local/research-cloud-platform
+    bash scripts/start_qwen_server.sh
+
+The model server binds to `127.0.0.1:8080` and is not intentionally exposed to
+the public network.
+
+The model itself and its runtime cache live outside Git under the WSL-native
+runtime filesystem. The default model is Qwen3-8B GGUF Q4_K_M.
+
+This split keeps source control and agent development independent from the
+long-running local inference process and makes model crashes, agent exceptions,
+GPU usage and server logs easier to isolate.

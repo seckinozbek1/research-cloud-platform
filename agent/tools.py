@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from agent.workload import inspect_workload_request
+from agent.policy import inspect_policy_request
 
 
 def _run_readonly(command: list[str]) -> str | None:
@@ -128,6 +129,7 @@ def inspect_environment() -> dict[str, Any]:
 TOOLS = {
     "inspect_environment": inspect_environment,
     "inspect_workload": inspect_workload_request,
+    "inspect_policy": inspect_policy_request,
 }
 
 
@@ -157,6 +159,24 @@ TOOL_SCHEMAS = [
                 "Inspect workload requirements explicitly stated in the "
                 "current user request. Missing requirements remain unknown. "
                 "Read-only and non-executing."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "additionalProperties": False,
+            },
+        },
+    }
+    ,
+    {
+        "type": "function",
+        "function": {
+            "name": "inspect_policy",
+            "description": (
+                "Inspect explicit workload-placement policy facts in the "
+                "current user request, including whether cloud is required, "
+                "whether excess capacity is temporary, and whether high load "
+                "is sustained. Missing facts remain unknown. Read-only."
             ),
             "parameters": {
                 "type": "object",

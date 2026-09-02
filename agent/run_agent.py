@@ -7,6 +7,7 @@ from typing import Any
 
 from agent.tools import TOOLS, TOOL_SCHEMAS
 from agent.validation import validate_placement
+from agent.output import print_result
 
 
 API_URL = "http://127.0.0.1:8080/v1/chat/completions"
@@ -26,9 +27,10 @@ Rules:
 2. Clearly distinguish OBSERVED, INFERRED, and UNKNOWN information.
 3. Missing information remains UNKNOWN.
 4. Environment capacity alone is not workload suitability.
-5. For local-versus-cloud placement questions, inspect BOTH:
+5. For local-versus-cloud placement questions, inspect ALL THREE:
    - the current environment
    - the workload request
+   - the explicit placement policy
 6. Do not call CPU, RAM, GPU, disk, or another resource sufficient,
    insufficient, high, low, risky, or constrained without workload-specific
    evidence supporting that comparison.
@@ -83,7 +85,7 @@ def execute_tool(
             "error": f"Unknown tool: {name}",
         }
 
-    if name == "inspect_workload":
+    if name in {"inspect_workload", "inspect_policy"}:
         return TOOLS[name](user_request)
 
     return TOOLS[name]()
@@ -161,13 +163,8 @@ if __name__ == "__main__":
 
     validated = validate_placement(evidence)
 
-    print("\n=== AGENT NARRATIVE ===\n")
-    print(narrative)
-
-    print("\n=== VALIDATED DECISION ===\n")
-    print(
-        json.dumps(
-            validated,
-            indent=2,
-        )
+    print_result(
+        evidence=evidence,
+        validated=validated,
+        commentary=narrative,
     )

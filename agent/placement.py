@@ -28,10 +28,12 @@ def _normalize_environment(
     }
 
 
-def _normalize_workload(
+def _normalize_request(
     workload: dict[str, Any],
+    policy: dict[str, Any],
 ) -> dict[str, Any]:
     req = workload["requirements"]
+    pol = policy["policy"]
 
     return {
         "required_cpu_threads":
@@ -46,13 +48,16 @@ def _normalize_workload(
         "gpu_required":
             req.get("gpu_required"),
 
+        # Placement-policy facts come from the dedicated
+        # deterministic policy inspector.
         "cloud_required":
-            req.get("cloud_required"),
+            pol.get("cloud_required"),
 
-        # These will later come from policy/workload
-        # characterization tools.
-        "temporary_excess": None,
-        "sustained_high_load": None,
+        "temporary_excess":
+            pol.get("temporary_excess"),
+
+        "sustained_high_load":
+            pol.get("sustained_high_load"),
     }
 
 
@@ -60,40 +65,67 @@ def resolve_agent_placement(
     evidence: dict[str, Any],
 ) -> dict[str, Any]:
     """
-    Adapter between case-agnostic agent evidence and the existing
-    deterministic hybrid placement engine.
+    Deterministic bridge between agent evidence and the existing
+    canonical hybrid placement engine.
 
-    The adapter refuses to interpret missing workload facts as evidence
-    of local sufficiency.
+    Missing facts are never converted into False defaults.
     """
 
     environment = evidence.get("inspect_environment")
     workload = evidence.get("inspect_workload")
+    policy = evidence.get("inspect_policy")
+
+    missing_tools = []
 
     if environment is None:
-        return {
-            "decision": "UNKNOWN",
-            "status": "INPUT_REQUIRED",
-            "missing": ["inspect_environment"],
-            "authority": "deterministic_placement_adapter",
-        }
+        missing_tools.append("inspect_environment")
 
     if workload is None:
+        missing_tools.append("inspect_workload")
+
+    if policy is None:
+        missing_tools.append("inspect_policy")
+
+    if missing_tools:
         return {
             "decision": "UNKNOWN",
             "status": "INPUT_REQUIRED",
-            "missing": ["inspect_workload"],
+            "missing": missing_tools,
             "authority": "deterministic_placement_adapter",
         }
 
-    request = _normalize_workload(workload)
+    if policy.get("conflicts"):
+        return {
+            "decision": "UNKNOWN",
+            "status": "CONFLICTING_INPUT",
+            "conflicts": policy["conflicts"],
+            "reason": (
+                "Conflicting explicit placement-policy statements "
+                "must be resolved before routing."
+            ),
+            "authority": "deterministic_placement_adapter",
+        }
+
     local = _normalize_environment(environment)
+    request = _normalize_request(workload, policy)
 
     # ---------------------------------------------------------
-    # Explicit cloud requirement takes precedence.
-    #
-    # The canonical router itself handles the remaining policy
-    # questions such as sustained usage.
+    # Canonical first question: Is cloud explicitly required?
+    # ---------------------------------------------------------
+
+    if request["cloud_required"] is None:
+        return {
+            "decision": "POLICY_INPUT_REQUIRED:CLOUD_REQUIRED",
+            "status": "INPUT_REQUIRED",
+            "missing": ["cloud_required"],
+            "authority": "hybrid.adaptive_placement.route_workload",
+            "local_capacity": local,
+            "normalized_request": request,
+        }
+
+    # ---------------------------------------------------------
+    # Explicit cloud requirement bypasses local sufficiency.
+    # Canonical router determines on-demand vs sustained cloud.
     # ---------------------------------------------------------
 
     if request["cloud_required"] is True:
@@ -115,49 +147,33 @@ def resolve_agent_placement(
         }
 
     # ---------------------------------------------------------
-    # Cloud-required policy itself is still unknown.
-    # Do not invent False.
-    # ---------------------------------------------------------
-
-    if request["cloud_required"] is None:
-        return {
-            "decision": "POLICY_INPUT_REQUIRED:CLOUD_REQUIRED",
-            "status": "INPUT_REQUIRED",
-            "missing": ["cloud_required"],
-            "authority": "hybrid.adaptive_placement.route_workload",
-            "local_capacity": local,
-            "normalized_request": request,
-        }
-
-    # ---------------------------------------------------------
     # cloud_required is explicitly False.
-    #
-    # Before deciding that local capacity is sufficient, require
-    # workload-specific CPU and RAM evidence.
+    # Resource evidence is required before local sufficiency
+    # can be asserted.
     # ---------------------------------------------------------
 
-    missing = []
+    missing_requirements = []
 
     if request["required_cpu_threads"] is None:
-        missing.append("cpu_cores_required")
+        missing_requirements.append("cpu_cores_required")
 
     if request["required_ram_gib"] is None:
-        missing.append("memory_gib_required")
+        missing_requirements.append("memory_gib_required")
 
     if request["gpu_required"] is None:
-        missing.append("gpu_required")
+        missing_requirements.append("gpu_required")
 
     if (
         request["gpu_required"] is True
         and request["required_gpu_memory_gib"] is None
     ):
-        missing.append("gpu_vram_gib_required")
+        missing_requirements.append("gpu_vram_gib_required")
 
-    if missing:
+    if missing_requirements:
         return {
             "decision": "UNKNOWN",
             "status": "INPUT_REQUIRED",
-            "missing": missing,
+            "missing": missing_requirements,
             "reason": (
                 "Local sufficiency cannot be established from "
                 "incomplete workload resource requirements."
