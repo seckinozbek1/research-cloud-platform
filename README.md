@@ -77,7 +77,7 @@ treated as separate architectural decisions.
 Enter the configured local runtime with:
 
     cd /mnt/c/Users/secki/local/research-cloud-platform
-    ./scripts/enter_runtime.sh
+    bash scripts/enter_runtime.sh
 
 The project began as a local data and API platform and progressively expanded
 into a broader research-computing and enterprise architecture.
