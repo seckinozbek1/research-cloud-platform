@@ -1,44 +1,103 @@
 # Research Cloud Platform
 
-An evolving research-computing and data-platform project used to learn infrastructure, cloud computing, distributed systems, data engineering, deployment, security and observability from first principles.
+A cumulative research-computing, data-platform and infrastructure project built
+to develop systems-level competence across cloud computing, distributed systems,
+data engineering, research computing, MLOps, governance and enterprise
+architecture.
 
-The platform is developed locally on:
+The primary development environment is:
 
-Windows 11 → WSL2 → Ubuntu → Linux shell
-
-The project files should remain in the WSL Linux filesystem:
-
+    Windows 11
+        ↓
+    WSL2
+        ↓
+    Ubuntu
+        ↓
+    Linux shell
+        ↓
     ~/research-cloud-platform
 
-rather than under `/mnt/c/`.
+Project files are intentionally kept in the WSL Linux filesystem rather than
+under /mnt/c/.
 
-The current platform contains:
+The project began as a local data and API platform and progressively expanded
+into a broader research-computing and enterprise architecture.
 
-    research data
+The final system is easier to understand as several interacting planes rather
+than as one linear technology stack.
+
+Data plane:
+
+    raw / operational data
         ↓
-    preprocessing / data engineering
+    ingestion and preprocessing
         ↓
-    analytical and serving datasets
+    curated / analytical / serving data
         ↓
-    Spark processing
-        ↓
-    FastAPI service
-        ↓
-    Docker image
-        ↓
+    models and analytical artefacts
+
+Compute plane:
+
+    local CPU / GPU
+    Docker containers
     Kubernetes
-        ↓
-    security / IAM controls
-        ↓
-    Terraform
-        ↓
-    GitHub Actions CI/CD
-        ↓
-    Prometheus
-        ↓
-    Grafana
+    Spark
+    SLURM / MPI
+    distributed machine learning
+    optional cloud execution targets
 
-The project is intentionally cumulative. New infrastructure concepts are added to the same platform rather than implemented as unrelated toy exercises.
+Control plane:
+
+    IAM / security
+    Terraform / Infrastructure as Code
+    CI/CD
+    observability
+    reliability
+    MLOps
+    governance / privacy
+    metadata / lineage
+    FinOps
+
+Placement plane:
+
+    workload telemetry
+        +
+    policy
+        +
+    local capacity
+        +
+    governance
+        +
+    economics
+        ↓
+    execution decision
+
+The placement layer can evaluate workloads for:
+
+    LOCAL_PC
+    CLOUD_BURST
+    LOCAL_LINUX_SERVER
+    FULL / COMMITTED CLOUD
+
+The architecture is concept-first and provider-neutral. AWS, Google Cloud and
+Azure are treated as alternative implementations of infrastructure concepts,
+rather than as three unrelated product catalogues.
+
+The project is intentionally cumulative. New concepts are integrated into the
+same platform instead of being implemented as disconnected toy exercises.
+
+Two workloads show that evolution particularly clearly.
+
+The earlier education-attendance pipeline remains the main API and
+data-platform example.
+
+The later Karşıyaka waste-GIS system became the primary cumulative workload for
+MLOps, research computing, HPC, GPU and distributed-ML experiments, governance,
+FinOps and hybrid-placement work.
+
+The consolidated enterprise reference architecture is documented in:
+
+    enterprise/ARCHITECTURE.md
 
 
 ## 1. Prerequisites
@@ -91,9 +150,10 @@ Clone into the WSL Linux filesystem:
     git clone git@github.com:seckinozbek1/research-cloud-platform.git
     cd research-cloud-platform
 
-The main development branch is:
+Use the repository's default branch for the stable version of the platform.
 
-    main
+Feature work may be developed on topic branches and merged after validation.
+The README therefore does not hard-code a temporary development branch name.
 
 
 ## 3. Python environment
@@ -416,14 +476,24 @@ Terraform local runtime material must not be committed:
     terraform/.terraform/
     terraform/*.tfstate
     terraform/*.tfstate.*
+    hybrid/workload_profiles/
+    hybrid/adaptive_placement_decision.json
+    hybrid/capacity_decision.json
+    hybrid/hybrid_execution_plan.json
+    hybrid/local_server_vs_cloud.json
+    enterprise/architecture_snapshot.json
+    artifacts/distributed_ml/*runtime*_metrics.json
+    MLflow runtime state
 
 The provider lock file SHOULD be committed:
 
     terraform/.terraform.lock.hcl
 
-Terraform will later be used to reproduce the platform architecture across AWS, GCP and Azure.
+Terraform represents the Infrastructure-as-Code layer of the platform.
+Provider-specific implementations can extend the same architecture across AWS,
+Google Cloud and Azure without changing the underlying systems model.
 
-The intended cloud-learning workflow is:
+The provider-learning workflow is:
 
     understand the infrastructure concept
         ↓
@@ -481,7 +551,10 @@ Conceptually:
         ↓
     deployment target
 
-The final deployment stage will be attached to a real server/cloud environment later in the course rather than simulated against an inaccessible local kind cluster.
+Deployment targets are intentionally decoupled from the CI pipeline. The same
+build artefact can be used with local, Kubernetes, HPC or cloud execution paths
+when workload and policy requirements justify them. The repository does not
+claim a permanent production deployment on every cloud provider.
 
 The same pipeline concepts transfer directly to systems such as:
 
@@ -776,7 +849,7 @@ The local lab creates one tmux session:
 
     research-cloud
 
-with six named windows:
+with six core named windows:
 
     0  infra
     1  api
@@ -784,6 +857,13 @@ with six named windows:
     3  grafana
     4  client
     5  work
+
+The reliability workflow may additionally use a dedicated window named:
+
+    alerts
+
+for the local alert watcher. This is an operational monitoring window rather
+than one of the six core service/development windows.
 
 Roles:
 
@@ -1005,208 +1085,640 @@ The monitoring dashboard remains available during local operation so behaviour c
 
 ## 25. MLOps GIS workflow
 
-The first MLOps implementation uses a geospatial municipal waste-demand case
-for a fictional Karşıyaka municipal analytics team.
+The main MLOps application is a geospatial waste-demand and municipal-operations
+system based on Karşıyaka.
 
-The learning target remains the MLOps lifecycle rather than model sophistication:
+The purpose of the workload is not merely to predict waste volume. It provides
+a cumulative application through which data engineering, model lifecycle,
+operations, research computing, governance and infrastructure decisions can be
+connected.
 
-    data
-    → train
-    → track
-    → evaluate
-    → version
-    → serve
-    → monitor
-    → retrain
+The spatial context includes:
 
-The case has evolved from the initial coarse prototype into a 100 m
-brownfield municipal operations substrate.
+- the real Karşıyaka administrative boundary
+- the OpenStreetMap drivable road network
+- WorldPop population data
+- OpenStreetMap activity / POI context
 
-Current spatial and operational architecture:
+The synthetic operational substrate includes:
 
-    real Karşıyaka administrative boundary
-    + OSM drivable road network
-    + WorldPop 2025 100 m population raster
-    + OSM POI / activity context
-            ↓
-    100 m demand cells
-            ↓
-    synthetic existing infrastructure
-        1,200 physical bins
-        858 collection points
-        3 hubs
-        12 trucks
-            ↓
-    dynamic operating context
-        vehicle-specific travel speeds
-        rush-hour traffic
-        roadworks
-        temporary closures
-        event congestion
-        rain
-        crew availability
-        breaks and shifts
-        maintenance
-        vehicle faults and breakdowns
-            ↓
-    generated waste demand
-            ↓
-    baseline scheduler
-            ↓
-    utility-service scheduler
+- 100 m demand cells
+- 1,200 physical bins
+- 858 collection points
+- 3 hubs
+- 12 trucks
+- vehicle-specific travel times
+- traffic scenarios
+- temporary road disruption
+- rain
+- crew availability
+- shifts and breaks
+- maintenance
+- vehicle failures
 
-Permanent hubs and collection points are snapped to the largest strongly
-connected component of the directed driving network so permanent
-infrastructure is not created on disconnected OSM graph fragments.
+The MLOps lifecycle implemented around this workload includes:
 
-Waste collection is treated as a public utility obligation. Priority points
-have a maximum 24-hour service interval, standard points a maximum 48-hour
-interval, and imminent overflow creates a same-day service obligation.
-Worker breaks and safe working-time constraints remain hard constraints.
+    operational / curated data
+        ↓
+    feature preparation
+        ↓
+    temporal train / test separation
+        ↓
+    reproducible training
+        ↓
+    MLflow experiment and artefact tracking
+        ↓
+    feature contract
+        ↓
+    batch inference
+        ↓
+    online serving
+        ↓
+    drift monitoring
+        ↓
+    prediction-performance monitoring
+        ↓
+    retraining decision
 
-Detailed operations-research optimization is intentionally deferred until
-after the first MLOps lifecycle. The deferred work is documented in:
+The temporal holdout is deliberate. It evaluates the model against later
+observations rather than relying on a random split that would be less
+representative of future inference.
 
-    docs/waste_gis_optimization_backlog.md
+The operational simulator also preserves state across time.
 
-The current ML model is still a deliberately simple first-pass demand
-forecasting model. It exists to teach the lifecycle and is not yet the final
-100 m exogenous-demand model used by the later optimization system.
+Explicit bin backlog and street waste make it possible to compare infrastructure
+and collection-flow policies using service-level outcomes rather than treating
+each simulated day as independent.
 
-Current MLOps components:
+Relevant implementation is under:
 
-    temporal train/test split
-            ↓
-    naive baseline
-            ↓
-    linear regression
-            ↓
-    MLflow experiment tracking
-            ↓
-    Logged Model artifact
-            ↓
-    Model Registry
-        waste-demand-forecast
-        candidate alias
-            ↓
-    reproducibility metadata
-        training-data SHA256
-        feature list
-        temporal cutoff
-        train/test row counts
-        Git commit
-        dependency environment
-            ↓
-    local feature-store pattern
+    mlops/waste_gis/
 
-The registered candidate currently points to the reproducible model version.
-Registry state itself is stored in the local MLflow SQLite database and is not
-committed to Git.
-
-Generated GIS, model-runtime, feature-table, and simulation outputs are
-reproducible runtime artefacts and are not committed to Git.
-
-Install the MLOps environment dependencies inside the project virtual
-environment:
-
-    pip install -r requirements.mlops.txt
-
-Key spatial-data preparation scripts include:
-
-    python3 mlops/waste_gis/generate_spatial_base.py
-    python3 mlops/waste_gis/generate_collection_zones.py
-    python3 mlops/waste_gis/build_spatial_features.py
-    python3 mlops/waste_gis/enrich_population.py
-    python3 mlops/waste_gis/build_activity_features.py
-
-Key operational-substrate scripts include:
-
-    python3 mlops/waste_gis/generate_existing_infrastructure.py
-    python3 mlops/waste_gis/build_dynamic_traffic_state.py
-    python3 mlops/waste_gis/build_hub_bin_travel_matrix.py
-    python3 mlops/waste_gis/generate_daily_operational_state.py
-    python3 mlops/waste_gis/build_bin_demand_baseline.py
-    python3 mlops/waste_gis/build_collection_points.py
-    python3 mlops/waste_gis/prepare_scheduler_inputs.py
-    python3 mlops/waste_gis/build_utility_service_policy.py
-
-Simulation scripts:
-
-    python3 mlops/waste_gis/simulate_baseline_operations.py
-    python3 mlops/waste_gis/simulate_utility_operations.py
-
-The first-pass reproducible ML training entry point is:
-
-    python3 mlops/waste_gis/train_linear_model_no_lag.py
-
-The local feature-table materialization entry point is:
-
-    python3 mlops/waste_gis/feature_store/materialize_features.py
-
-The local MLflow metadata store uses:
-
-    mlflow.db
-
-This runtime database is excluded from Git.
-
-Start the local MLflow UI:
-
-    scripts/start_mlflow_local.sh
-
-Open a specific tracked run and its experiment context:
-
-    scripts/open_mlflow_context.sh <run_id>
-
-The current first-pass model uses a temporal holdout rather than a random split
-so evaluation more closely resembles future production inference.
-
-## 26. Current scope and next stages
-
-The repository is still an evolving course platform.
-
-The expanded waste-GIS operations and optimization work is intentionally
-paused while the first MLOps lifecycle is completed. The deferred analysis
-and optimization plan is recorded in
-`docs/waste_gis_optimization_backlog.md`.
-
-The expanded waste-GIS operations and optimization work is intentionally
-paused while the first MLOps lifecycle is completed. The deferred analysis
-and optimization plan is recorded in
-`docs/waste_gis_optimization_backlog.md`.
+Local MLflow runtime state remains outside version control.
 
 
-The current implementation has reached:
+## 26. Course coverage and repository evidence
 
-- Linux/system foundations
-- networking
-- compute
-- storage
-- relational databases
-- cloud fundamentals
-- warehouses/data lakes
-- ETL/ELT
-- Docker
-- distributed computing
-- Spark
-- APIs/serverless concepts
-- Kubernetes
-- IAM/security
+The structured cloud, distributed-systems and research-computing programme that
+produced this platform is complete.
+
+The syllabus was followed in the following 26-topic learning order:
+
+1. Linux and basic systems
+2. networking
+3. compute and virtual machines
+4. storage
+5. relational databases
+6. AWS / GCP / Azure fundamentals
+7. warehouses, data lakes and lakehouse concepts
+8. ETL / ELT
+9. Docker
+10. distributed computing
+11. Spark
+12. APIs and serverless concepts
+13. Kubernetes
+14. IAM and security
+15. Terraform
+16. CI/CD
+17. monitoring and reliability
+18. MLOps
+19. HPC and SLURM
+20. MPI
+21. GPU computing
+22. distributed machine learning
+23. governance and privacy
+24. FinOps
+25. hybrid and multi-cloud architecture
+26. full enterprise architecture
+
+Batch and streaming architectures and academic research-computing concerns are
+also part of the broader syllabus and are connected to the relevant data,
+distributed-computing and HPC sections.
+
+Course coverage and repository implementation are not treated as identical
+claims.
+
+Some syllabus topics are architectural or conceptual by nature. The repository
+does not pretend that every vendor-specific service discussed during the course
+was deployed in production.
+
+Concrete implementation evidence in the repository and local lab includes:
+
+- Linux / WSL development and operations
+- Spark-based data processing
+- FastAPI serving
+- Docker containerisation
+- local Kubernetes workloads
+- Kubernetes security controls
 - Terraform
-- CI/CD
-- monitoring
-- reliability engineering
-- MLOps in progress
+- GitHub Actions CI/CD and container build/publish
+- Prometheus and Grafana observability
+- local SLO-style reliability alerting
+- the Karşıyaka MLOps lifecycle
+- SLURM job arrays exercised against a local Docker-based SLURM lab
+- MPI within a SLURM allocation
+- CUDA-backed GPU computation
+- PyTorch distributed training
+- Ray Train
+- optimizer and parameter-sharding exercises
+- governance and privacy profiling
+- data lineage
+- adaptive workload profiling and placement
+- FinOps-aware local-versus-cloud decision logic
+- automated integration / integrity tests
+- an enterprise architecture snapshot and reference document
 
-Later stages will extend the same platform with:
+The repository therefore represents both a learning record and a working
+research-platform architecture.
 
-- HPC / SLURM
-- MPI
-- GPU computing
-- distributed ML
-- governance/privacy
+
+## 27. HPC, SLURM, MPI and academic research computing
+
+The project was exercised against a local Docker-based SLURM research-computing
+lab.
+
+The SLURM cluster runtime itself was operated as a local lab environment; the
+repository contains the workload, worker and scheduling artefacts used against
+that environment.
+
+The Karşıyaka travel-matrix workload was decomposed into six independent:
+
+    truck type × traffic scenario
+
+combinations.
+
+SLURM job arrays produced a canonical output containing 21,600 rows.
+
+The distributed result was checked against the single-process canonical output.
+
+MPI was then exercised inside a SLURM allocation using OpenMPI and mpi4py.
+
+The distinction is important:
+
+    SLURM
+        allocates and schedules resources
+
+    MPI
+        coordinates communication among processes
+
+The implementation also exposed a central research-computing lesson:
+
+    distributed != automatically faster
+
+For relatively small workloads, process startup, scheduling and communication
+overhead can exceed the compute saved through parallelism.
+
+This section connects cloud infrastructure to academic/research-computing
+concerns such as:
+
+- reproducibility
+- batch scheduling
+- shared compute
+- provenance
+- resource allocation
+- scaling experiments
+- workload portability
+
+
+## 28. GPU computing and distributed machine learning
+
+CUDA-backed PyTorch workloads run against the NVIDIA GPU exposed through WSL.
+
+GPU benchmarking distinguishes:
+
+    device compute time
+
+from:
+
+    end-to-end runtime
+
+including transfer and orchestration overhead.
+
+A corrected dense-compute benchmark demonstrated substantial acceleration on
+the GPU.
+
+The Karşıyaka overflow benchmark evaluated more than 73 million scenario
+combinations and achieved a substantial GPU speedup while preserving equivalent
+results.
+
+Distributed-machine-learning exercises include:
+
+- PyTorch DistributedDataParallel
+- multi-process CPU training
+- CPU / GPU model partitioning
+- ZeroRedundancyOptimizer
+- parameter-sharding / FSDP-style mechanics
+- DeepSpeed ZeRO configuration
+- Ray Train
+
+The exercises distinguish different scaling problems.
+
+DDP primarily addresses throughput scaling.
+
+Optimizer and parameter sharding address memory duplication.
+
+Model parallelism addresses models that cannot fit on one device.
+
+Ray provides a higher-level orchestration layer.
+
+Measured cases where orchestration overhead makes execution slower are retained
+as engineering evidence rather than hidden.
+
+
+## 29. Governance, privacy and lineage
+
+Governance is implemented as an adaptive metadata and policy layer rather than
+as a hard-coded list of filenames.
+
+The governance workflow can:
+
+- discover repository data assets
+- infer data layers and domains
+- enrich metadata
+- profile privacy-sensitive fields
+- distinguish direct and pseudonymized identifiers
+- retain temporal values as potential quasi-identifiers
+- apply sensitivity and privacy actions
+- enforce workload-scoped governance gates
+
+Lineage is maintained through append-only execution events.
+
+Recorded provenance can include:
+
+- run identifier
+- timestamp
+- transformation
+- input assets
+- output assets
+- hashes
+- Git state
+
+This allows the platform to reason about where an artefact came from and whether
+an upstream input has changed.
+
+The Karşıyaka and distributed-ML scope is checked through a dedicated governance
+gate.
+
+The hybrid layer also uses lineage to resolve the minimum known input set
+required by a workload before a potential transfer across an execution boundary.
+
+Relevant implementation is under:
+
+    governance/
+
+
+## 30. FinOps and adaptive hybrid placement
+
+FinOps is integrated into workload placement rather than implemented as a
+static provider-price spreadsheet.
+
+The central rule is:
+
+    hard-code policy and decision workflow
+        ↓
+    discover operational facts at runtime
+
+Operational facts include:
+
+- workload CPU requirements
+- RAM requirements
+- GPU / VRAM requirements
+- runtime
+- storage footprint
+- provider
+- region
+- machine / SKU candidate
+- current cloud pricing
+- observed billing
+- local-server acquisition cost
+- power consumption
+- electricity tariff
+- maintenance cost
+
+When actual usage or billing is available, an observed point value can be used.
+
+When a required fact is uncertain but bounded, the system can represent a
+range.
+
+When required information cannot be resolved, the result remains:
+
+    UNKNOWN
+
+rather than receiving an invented fallback.
+
+The canonical placement decision tree is:
+
+    Is cloud specifically required?
+        |
+       yes
+        |
+        +--> cloud placement evaluation
+        |
+       no
+        |
+        v
+    Is the current PC sufficient?
+        |
+       yes --> LOCAL_PC
+        |
+       no
+        |
+        v
+    Is the excess temporary?
+        |
+       yes --> CLOUD_BURST
+        |
+       no
+        |
+        v
+    LOCAL_LINUX_SERVER
+        versus
+    COMMITTED / FULL CLOUD
+
+The local profiler measures workload runtime, CPU, RAM, process-tree and
+workload-specific GPU use.
+
+The hybrid planner combines:
+
+- telemetry
+- policy
+- local capacity
+- lineage
+- governance
+- economics
+
+before selecting or planning an execution path.
+
+Relevant implementation is under:
+
+    hybrid/
+    finops/
+
+The adaptive-placement code includes live-pricing adapters for Azure, AWS and
+Google Cloud where the required public API access, API key or credentials are
+available.
+
+These adapters resolve pricing information for supplied or otherwise resolved
+cloud candidates.
+
+The repository does not claim fully autonomous discovery of every compatible
+provider SKU.
+
+It also does not claim that the hybrid planner currently provisions arbitrary
+AWS, Google Cloud or Azure infrastructure and transfers production data
+automatically.
+
+The current implementation is a placement, pricing and execution-planning
+control layer rather than a universal cloud provisioner.
+
+Static provider prices are not treated as authoritative.
+
+
+## 31. Hybrid and multi-cloud architecture
+
+The platform is local-first when local execution satisfies capacity, policy and
+economic requirements, but it is not local-only.
+
+Hybrid execution is designed around:
+
+- minimum necessary data movement
+- governance before transfer
+- provenance across execution boundaries
+- short-lived or federated workload identity
+- explicit cleanup of temporary cloud resources
+- provider-neutral application logic where useful
+- provider-specific adapters where justified
+
+Multi-cloud is not treated as an automatic objective.
+
+It becomes reasonable when requirements such as the following justify the
+additional complexity:
+
+- regulation
+- resilience
+- geography
+- customer or institutional constraints
+- specialized provider capabilities
+- acquisition history
+- meaningful vendor diversification
+
+The architecture therefore separates:
+
+    provider-neutral core logic
+
+from:
+
+    provider-specific implementation adapters
+
+AWS, Google Cloud and Azure are mapped to common infrastructure concepts, but
+the project does not represent three independent production deployments.
+
+
+## 32. Enterprise architecture
+
+The consolidated architecture separates several interacting planes.
+
+Data plane:
+
+    raw / operational data
+        ↓
+    ingestion and preprocessing
+        ↓
+    curated / analytical / serving layers
+        ↓
+    models and analytical artefacts
+
+Compute plane:
+
+    local CPU / GPU
+    Docker
+    Kubernetes
+    Spark
+    SLURM / MPI
+    distributed ML
+    optional cloud targets
+
+Control plane:
+
+    IAM / security
+    governance / privacy
+    lineage
+    Terraform
+    CI/CD
+    observability
+    reliability
+    MLOps
+    FinOps
+
+Placement plane:
+
+    telemetry
+      + policy
+      + capacity
+      + governance
+      + economics
+        ↓
+    execution decision
+
+The reference architecture is maintained in:
+
+    enterprise/ARCHITECTURE.md
+
+The repository can also generate a machine-readable architecture snapshot from
+evidence that actually exists in the project.
+
+The architecture deliberately distinguishes domain-specific logic from
+commodity infrastructure.
+
+This supports build-versus-buy decisions without assuming that either
+self-hosting or managed cloud services are always preferable.
+
+
+## 33. Automated validation
+
+The repository contains a small automated integration and integrity test suite
+for critical cross-cutting invariants.
+
+It is intentionally described as a targeted validation suite rather than as
+comprehensive production test coverage.
+
+Current tests verify that:
+
+- the Karşıyaka governance gate passes
+- the measured DDP workload routes to LOCAL_PC when local capacity is sufficient
+- lineage events exist
+- lineage events contain the expected provenance structure
+- DDP training lineage links its input data to its output metrics
+
+Run:
+
+    python -m unittest discover -s tests -p 'test_*.py' -v
+
+The enterprise architecture discovery layer also checks for implementation
+evidence across capability groups such as:
+
+- data
+- ML pipelines
+- HPC / distributed compute
+- governance
 - FinOps
-- hybrid cloud
-- multi-cloud
+- hybrid placement
+- Infrastructure as Code
+- containers
+- tests
+- documentation
+
+The local five-test suite and the GitHub Actions pipeline should not be assumed
+to be the same test surface unless the CI workflow explicitly invokes these
+tests.
+
+
+## 34. Engineering principles
+
+### Measure rather than assume
+
+Do not assume that:
+
+- more CPU cores are automatically faster
+- a GPU is always faster
+- distributed execution improves runtime
+- cloud is always cheaper
+- local compute is free
+- multi-cloud automatically improves resilience
+
+Profile the workload and measure the result.
+
+
+### Capacity first, provider second
+
+Begin with:
+
+    compute
+    memory
+    GPU / VRAM
+    storage
+    networking
+    latency
+    reliability
+    governance
+    cost
+
+Then map those requirements to AWS, Google Cloud, Azure, local hardware, HPC or
+another execution environment.
+
+
+### Governance before movement
+
+A technically possible data transfer is not automatically acceptable.
+
+Lineage, privacy classification and organizational policy should be evaluated
+before data crosses an execution boundary.
+
+
+### Provider-neutral where useful, provider-specific where justified
+
+Portability has value, but so do managed services and provider-specific
+optimization.
+
+Vendor lock-in is treated as an architectural trade-off rather than as an
+automatic failure.
+
+
+### Reproducibility over remembered operations
+
+Important system state should be represented through:
+
+- source code
+- configuration
+- Infrastructure as Code
+- tests
+- metadata
+- lineage
+- documentation
+
+rather than depending on remembered shell history.
+
+
+## 35. Scope and limitations
+
+This repository is a research, engineering and learning platform.
+
+It is not a claim of operating a production multi-region enterprise cloud.
+
+It demonstrates real local implementation and experimentation across:
+
+- data engineering
+- APIs
+- containers
+- Kubernetes
+- Infrastructure as Code
+- CI/CD
+- observability and reliability
+- MLOps
+- HPC and MPI
+- GPU computing
+- distributed machine learning
+- governance and lineage
+- FinOps-aware workload placement
+- hybrid / multi-cloud architectural reasoning
 - enterprise architecture
 
-AWS, GCP and Azure exercises will reuse the infrastructure concepts already learned rather than becoming three unrelated product tutorials.
+AWS, Google Cloud and Azure mappings connect provider-neutral concepts to
+concrete implementation options.
+
+The project does not claim that every provider-specific managed service was
+deployed.
+
+The project does not claim an always-on production cloud environment.
+
+The project does not claim a production multi-cloud deployment.
+
+The local Docker-based SLURM lab used for research-computing exercises is an
+execution environment associated with the project rather than evidence that this
+repository itself contains a production HPC cluster.
+
+The adaptive hybrid layer currently plans placement and pricing decisions; it is
+not presented as a universal autonomous cloud provisioner.
+
+Future work can therefore focus on real applications, operational automation and
+new research workloads rather than extending a checklist of course topics.
