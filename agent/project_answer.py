@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import json
 from typing import Any
 
@@ -106,16 +108,20 @@ def _fallback_message(
 
 def answer_project_question(
     question: str,
+    root: Path | None = None,
 ) -> dict[str, Any]:
-    index = build_project_index()
+    root = root.resolve() if root else None
+    index = build_project_index(root=root)
 
     inspection = inspect_project(
-        index=index
+        index=index,
+        root=root,
     )
 
     search = search_project(
         question,
         index=index,
+        root=root,
     )
 
     evidence = search.get(

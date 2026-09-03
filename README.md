@@ -1904,3 +1904,26 @@ Open `http://127.0.0.1:8000` in a browser.
 
 The UI contains no external CDN dependency and approval tokens are bound to
 server-side analysed plans and are single-use.
+
+### Session project location
+
+The Operations Meta-Agent can inspect a project location selected explicitly
+by the user for the current chat session.
+
+For example:
+
+    Use /path/to/project as the project location
+
+When running through WSL, Windows paths such as:
+
+    C:\Users\name\project
+
+are translated to the corresponding WSL-mounted path when available.
+
+The selected project root is validated before use and remains scoped to the
+current chat session. Subsequent project questions use that root without
+changing the global runtime configuration or another session's project root.
+
+The inspection boundary continues to treat the selected root as the filesystem
+boundary for project reads and searches.
+

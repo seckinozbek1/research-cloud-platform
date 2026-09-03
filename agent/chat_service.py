@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import os
+import re
+from pathlib import Path
+
 import json
 import re
 import threading
@@ -27,6 +31,90 @@ MAX_HISTORY = 16
 
 
 _qwen = qwen_chat
+
+
+def _normalise_project_location(value: str) -> Path:
+    value = value.strip().strip('"').strip("'")
+
+    windows = re.fullmatch(
+        r"([A-Za-z]):\\(.+)",
+        value,
+    )
+
+    if windows and os.name != "nt":
+        drive = windows.group(1).lower()
+        tail = windows.group(2).replace("\\", "/")
+        candidate = Path("/mnt") / drive / tail
+    else:
+        candidate = Path(value).expanduser()
+
+    return candidate.resolve()
+
+
+def _extract_project_location(message: str) -> Path | None:
+    patterns = (
+        r"(?i)^use\s+(.+?)\s+as\s+(?:the\s+)?project\s+(?:location|root)\s*[.!]?$",
+        r"(?i)^(?:set\s+)?(?:the\s+)?project\s+(?:location|root)\s+(?:to|as)\s+(.+?)\s*[.!]?$",
+        r"(?i)^(?:the\s+)?project\s+(?:location|root)\s+is\s+(.+?)\s*[.!]?$",
+    )
+
+    for pattern in patterns:
+        match = re.match(pattern, message.strip())
+        if match:
+            return _normalise_project_location(
+                match.group(1)
+            )
+
+    return None
+
+
+def _active_project_root(
+    session_id: str,
+) -> Path | None:
+    state = _SESSION_STATE.get(
+        session_id,
+        {}
+    )
+    value = state.get("project_root")
+
+    if not value:
+        return None
+
+    return Path(value).resolve()
+
+
+def _set_project_root(
+    session_id: str,
+    root: Path,
+) -> None:
+    state = _SESSION_STATE.setdefault(
+        session_id,
+        {}
+    )
+    state["project_root"] = str(
+        root.resolve()
+    )
+
+
+def _is_project_location_question(
+    message: str,
+) -> bool:
+    lowered = message.lower()
+
+    return (
+        "project location" in lowered
+        or "project root" in lowered
+    ) and any(
+        term in lowered
+        for term in (
+            "what",
+            "which",
+            "where",
+            "using",
+            "current",
+            "active",
+        )
+    )
 
 def _history(
     session_id: str,
@@ -277,6 +365,103 @@ def handle_chat_message(
             "message": "What would you like to talk about or do?",
         }
 
+    requested_root = _extract_project_location(
+        cleaned
+    )
+
+    if requested_root is not None:
+        if not requested_root.exists():
+            return {
+                "session_id": session_id,
+                "kind": "error",
+                "message": (
+                    "That project location does not exist: "
+                    f"{requested_root}"
+                ),
+            }
+
+        if not requested_root.is_dir():
+            return {
+                "session_id": session_id,
+                "kind": "error",
+                "message": (
+                    "That project location is not a directory: "
+                    f"{requested_root}"
+                ),
+            }
+
+        if not os.access(requested_root, os.R_OK):
+            return {
+                "session_id": session_id,
+                "kind": "error",
+                "message": (
+                    "That project location is not readable: "
+                    f"{requested_root}"
+                ),
+            }
+
+        _set_project_root(
+            session_id,
+            requested_root,
+        )
+
+        reply = (
+            "Project location set to "
+            f"`{requested_root}`. "
+            "I will use this location for subsequent "
+            "project inspection in this chat session."
+        )
+
+        _append(
+            session_id,
+            "user",
+            cleaned,
+        )
+        _append(
+            session_id,
+            "assistant",
+            reply,
+        )
+
+        return {
+            "session_id": session_id,
+            "kind": "chat",
+            "message": reply,
+            "project_root": str(requested_root),
+        }
+
+    if _is_project_location_question(cleaned):
+        active_root = _active_project_root(
+            session_id
+        )
+
+        if active_root is None:
+            from agent.project_inspection import project_root
+            active_root = project_root()
+
+        reply = (
+            "The active project location for this chat is "
+            f"`{active_root}`."
+        )
+
+        _append(
+            session_id,
+            "user",
+            cleaned,
+        )
+        _append(
+            session_id,
+            "assistant",
+            reply,
+        )
+
+        return {
+            "session_id": session_id,
+            "kind": "chat",
+            "message": reply,
+            "project_root": str(active_root),
+        }
+
     history = _history(
         session_id
     )
@@ -356,7 +541,10 @@ def handle_chat_message(
     if route == "PROJECT":
         try:
             project_result = answer_project_question(
-                cleaned
+                cleaned,
+                root=_active_project_root(
+                    session_id
+                ),
             )
 
         except Exception as exc:

@@ -484,8 +484,9 @@ def read_project_file(
 
 def inspect_project(
     index: list[Path] | None = None,
+    root: Path | None = None,
 ) -> dict[str, Any]:
-    root = project_root()
+    root = root.resolve() if root else project_root()
 
     files = (
         index
@@ -1103,8 +1104,9 @@ def _python_search_project(
 def search_project(
     query: str,
     index: list[Path] | None = None,
+    root: Path | None = None,
 ) -> dict[str, Any]:
-    root = project_root()
+    root = root.resolve() if root else project_root()
 
     git_result = _git_grep_project(
         query,
