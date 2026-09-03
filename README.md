@@ -1889,3 +1889,18 @@ Additional installation-specific overrides are available through:
 - `QWEN_CONTEXT_SIZE`
 
 Machine-specific paths are configuration, not application logic.
+
+### Operations Meta-Agent web UI
+
+The local web interface is served by FastAPI and uses the same controlled
+natural-language planning, approval, execution, verification, and audit
+layers as the command-line development interface.
+
+Start the local model server, then launch the UI API with:
+
+    uvicorn agent.web_app:app --host 127.0.0.1 --port 8000
+
+Open `http://127.0.0.1:8000` in a browser.
+
+The UI contains no external CDN dependency and approval tokens are bound to
+server-side analysed plans and are single-use.

@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Operations Meta-Agent</title>
+<style>
+:root{
+  color-scheme:dark;
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --bg:#090b10;
+  --surface:#10141c;
+  --surface2:#151a24;
+  --border:#242b38;
+  --text:#f0f3f8;
+  --muted:#8c96a8;
+  --accent:#7c8cff;
+  --accent2:#5367f0;
+  --good:#43d17b;
+}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 20% 0%,#151a29 0,#090b10 38%);color:var(--text)}
+.shell{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+.sidebar{border-right:1px solid var(--border);padding:28px 22px;background:rgba(10,13,19,.82)}
+.brand{font-weight:760;letter-spacing:-.02em;font-size:17px}
+.badge{display:inline-flex;align-items:center;gap:7px;margin-top:18px;padding:7px 10px;border:1px solid var(--border);border-radius:999px;color:var(--muted);font-size:12px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 14px var(--good)}
+.sidecopy{margin-top:32px;color:var(--muted);font-size:13px;line-height:1.55}
+.main{display:flex;flex-direction:column;min-width:0;height:100vh}
+.topbar{padding:22px 34px;border-bottom:1px solid var(--border);background:rgba(9,11,16,.72);backdrop-filter:blur(10px)}
+.topbar strong{font-size:14px}
+.topbar span{color:var(--muted);font-size:13px;margin-left:8px}
+.chat{flex:1;overflow:auto;padding:42px max(28px,calc((100% - 820px)/2))}
+.welcome{padding:30px 0 42px}
+.welcome h1{font-size:34px;margin:0 0 10px;letter-spacing:-.04em}
+.welcome p{color:var(--muted);margin:0;line-height:1.6}
+.message{margin:20px 0}
+.user{display:flex;justify-content:flex-end}
+.user .bubble{max-width:72%;background:#20283a;border:1px solid #303a51;padding:13px 16px;border-radius:18px 18px 5px 18px;line-height:1.55}
+.assistant .bubble{max-width:82%;line-height:1.65;color:#e8ebf1}
+.label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:7px}
+.action-card{margin-top:16px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px}
+.action-title{font-weight:700;margin-bottom:5px}
+.action-copy{font-size:13px;color:var(--muted);line-height:1.5}
+button{font:inherit;border:0;cursor:pointer}
+.approve{margin-top:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:white;padding:10px 15px;border-radius:9px;font-weight:680}
+.raw{margin-top:14px}
+.raw summary{cursor:pointer;color:var(--muted);font-size:12px;user-select:none}
+.raw pre{white-space:pre-wrap;word-break:break-word;background:#080a0f;border:1px solid var(--border);border-radius:10px;padding:14px;font-size:12px;color:#aeb8ca;max-height:360px;overflow:auto}
+.composer-wrap{border-top:1px solid var(--border);padding:18px max(28px,calc((100% - 820px)/2)) 24px;background:rgba(9,11,16,.95)}
+.composer{display:flex;gap:12px;align-items:flex-end;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:10px 11px 10px 16px;box-shadow:0 16px 45px rgba(0,0,0,.28)}
+textarea{flex:1;resize:none;min-height:42px;max-height:150px;border:0;outline:0;background:transparent;color:var(--text);font:inherit;line-height:1.5;padding:8px 0}
+.send{width:42px;height:42px;border-radius:11px;background:var(--accent);color:white;font-size:18px}
+.hint{text-align:center;color:#5f6879;font-size:11px;margin-top:9px}
+@media(max-width:760px){.shell{grid-template-columns:1fr}.sidebar{display:none}.user .bubble,.assistant .bubble{max-width:94%}.topbar{padding:18px 20px}}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside class="sidebar">
+  <div class="brand">Operations Meta-Agent</div>
+  <div class="badge"><span class="dot"></span> Local controlled runtime</div>
+  <div class="sidecopy">
+    Talk normally.<br><br>
+    When you ask for a real operation, the agent can inspect, plan, request approval, execute through controlled tools, verify the result, and preserve audit evidence.
+  </div>
+</aside>
+
+<div class="main">
+<header class="topbar">
+  <strong>Conversation</strong>
+  <span>English-first local prototype</span>
+</header>
+
+<main class="chat" id="chat">
+  <div class="welcome" id="welcome">
+    <h1>What are we working on?</h1>
+    <p>Ask a question, discuss a problem, or tell me what you want to accomplish.</p>
+  </div>
+</main>
+
+<footer class="composer-wrap">
+  <div class="composer">
+    <textarea id="input" rows="1" placeholder="Message Operations Meta-Agent…"></textarea>
+    <button class="send" id="send">↑</button>
+  </div>
+  <div class="hint">Operational actions require controlled validation and approval.</div>
+</footer>
+</div>
+</div>
+
+<script>
+let sessionId=null;
+const chat=document.getElementById("chat");
+const input=document.getElementById("input");
+const send=document.getElementById("send");
+
+function scrollBottom(){chat.scrollTop=chat.scrollHeight}
+
+function addUser(text){
+  document.getElementById("welcome")?.remove();
+  const el=document.createElement("div");
+  el.className="message user";
+  el.innerHTML='<div class="bubble"></div>';
+  el.querySelector(".bubble").textContent=text;
+  chat.appendChild(el);
+  scrollBottom();
+}
+
+function renderSafeMarkdown(target,text){
+  text=(text||"").replace(/\\([*`])/g,"$1");
+  const re=/(\*\*`[^`]+`\*\*|`[^`]+`|\*\*[^*]+\*\*)/g;
+  let pos=0;
+
+  for(const match of text.matchAll(re)){
+    if(match.index>pos){
+      target.appendChild(document.createTextNode(text.slice(pos,match.index)));
+    }
+
+    const token=match[0];
+
+    if(token.startsWith("**`")){
+      const strong=document.createElement("strong");
+      const code=document.createElement("code");
+      code.textContent=token.slice(3,-3);
+      strong.appendChild(code);
+      target.appendChild(strong);
+    }else if(token.startsWith("`")){
+      const code=document.createElement("code");
+      code.textContent=token.slice(1,-1);
+      target.appendChild(code);
+    }else{
+      const strong=document.createElement("strong");
+      strong.textContent=token.slice(2,-2);
+      target.appendChild(strong);
+    }
+
+    pos=match.index+token.length;
+  }
+
+  if(pos<text.length){
+    target.appendChild(document.createTextNode(text.slice(pos)));
+  }
+}
+
+function addAssistant(data){
+  const el=document.createElement("div");
+  el.className="message assistant";
+
+  const label=document.createElement("div");
+  label.className="label";
+  label.textContent="Operations Meta-Agent";
+
+  const bubble=document.createElement("div");
+  bubble.className="bubble";
+  renderSafeMarkdown(bubble,data.message||"");
+
+  el.append(label,bubble);
+
+  if(data.kind==="approval"){
+    const card=document.createElement("div");
+    card.className="action-card";
+
+    const title=document.createElement("div");
+    title.className="action-title";
+    title.textContent="Action ready";
+
+    const copy=document.createElement("div");
+    copy.className="action-copy";
+    copy.textContent="Review the explanation above. Execution will only begin after your approval.";
+
+    const btn=document.createElement("button");
+    btn.className="approve";
+    btn.textContent="Approve & Run";
+    btn.onclick=async()=>{
+      btn.disabled=true;
+      btn.textContent="Running…";
+
+      const r=await fetch("/chat/approve",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          session_id:sessionId,
+          approval_id:data.approval_id
+        })
+      });
+
+      const result=await r.json();
+      addAssistant(result);
+      btn.remove();
+    };
+
+    card.append(title,copy,btn);
+    el.appendChild(card);
+  }
+
+  if(data.raw){
+    const details=document.createElement("details");
+    details.className="raw";
+
+    const summary=document.createElement("summary");
+    summary.textContent="Raw JSON";
+
+    const pre=document.createElement("pre");
+    pre.textContent=JSON.stringify(data.raw,null,2);
+
+    details.append(summary,pre);
+    el.appendChild(details);
+  }
+
+  chat.appendChild(el);
+  scrollBottom();
+}
+
+async function submit(){
+  const text=input.value.trim();
+  if(!text)return;
+
+  input.value="";
+  input.style.height="auto";
+  addUser(text);
+  send.disabled=true;
+
+  try{
+    const r=await fetch("/chat/message",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        message:text,
+        session_id:sessionId
+      })
+    });
+
+    const data=await r.json();
+    sessionId=data.session_id||sessionId;
+    addAssistant(data);
+  }catch(e){
+    addAssistant({
+      kind:"error",
+      message:"The local agent service could not process that message.",
+      raw:{error:String(e)}
+    });
+  }finally{
+    send.disabled=false;
+    input.focus();
+  }
+}
+
+send.onclick=submit;
+
+input.addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&!e.shiftKey){
+    e.preventDefault();
+    submit();
+  }
+});
+
+input.addEventListener("input",()=>{
+  input.style.height="auto";
+  input.style.height=Math.min(input.scrollHeight,150)+"px";
+});
+</script>
+</body>
+</html>

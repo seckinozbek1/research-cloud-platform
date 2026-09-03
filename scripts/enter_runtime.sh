@@ -14,7 +14,6 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     exit 2
 fi
 
-set -e
 
 SCRIPT_DIR="$(
     cd "$(dirname "${BASH_SOURCE[0]}")"

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import urllib.request
 from typing import Any
 
@@ -11,7 +12,17 @@ from agent.capabilities import (
 from agent.execute_task import build_execution_plan
 
 
-API_URL = "http://127.0.0.1:8080/v1/chat/completions"
+def get_qwen_api_url() -> str:
+    explicit = os.environ.get("QWEN_API_URL")
+
+    if explicit:
+        return explicit
+
+    host = os.environ.get("QWEN_HOST", "127.0.0.1")
+    port = os.environ.get("QWEN_PORT", "8080")
+
+    return f"http://{host}:{port}/v1/chat/completions"
+
 
 
 SYSTEM_PROMPT = """
@@ -80,6 +91,7 @@ def _extract_json(
 
 def _call_qwen(
     user_request: str,
+    conversation_context: str | None = None,
 ) -> dict[str, Any]:
     registry = json.dumps(
         public_capabilities(),
@@ -96,7 +108,9 @@ def _call_qwen(
             "content": (
                 "Available capabilities:\n"
                 f"{registry}\n\n"
-                "User request:\n"
+                "Conversation context:\n"
+                f"{conversation_context or '(none)'}\n\n"
+                "Current user request:\n"
                 f"{user_request}"
             ),
         },
@@ -112,7 +126,7 @@ def _call_qwen(
     }
 
     request = urllib.request.Request(
-        API_URL,
+        get_qwen_api_url(),
         data=json.dumps(payload).encode("utf-8"),
         headers={
             "Content-Type": "application/json",
@@ -186,6 +200,7 @@ def _is_obviously_vague(
 
 def plan_natural_language_request(
     user_request: str,
+    conversation_context: str | None = None,
 ) -> dict[str, Any]:
     if _is_obviously_vague(user_request):
         return {
@@ -201,7 +216,8 @@ def plan_natural_language_request(
 
     try:
         llm_plan = _call_qwen(
-            user_request
+            user_request,
+            conversation_context,
         )
     except Exception as exc:
         return {

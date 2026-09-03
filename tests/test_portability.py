@@ -117,6 +117,7 @@ class PortabilityTest(unittest.TestCase):
         for directory in (
             repo / "agent",
             repo / "scripts",
+            repo / "ui",
         ):
             for path in directory.rglob("*"):
                 if (
