@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PROJECT_ROOT="/home/seckinozbek/research-cloud-platform"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="${RESEARCH_CLOUD_PROJECT_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 WINDOW="mlflow"
 PORT="5000"
 

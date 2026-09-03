@@ -1,4 +1,5 @@
 from __future__ import annotations
+from agent.runtime_context import get_runtime_context
 
 import json
 import os
@@ -13,7 +14,7 @@ from typing import Any
 DEFAULT_RUNTIME = Path(
     os.environ.get(
         "RESEARCH_CLOUD_RUNTIME",
-        "/home/seckinozbek/research-cloud-runtime",
+        str(get_runtime_context().runtime_root),
     )
 )
 

@@ -21,11 +21,11 @@ The canonical checkout on the primary development workstation is:
 
 Windows:
 
-    C:\Users\secki\local\research-cloud-platform
+    C:\Users\<windows-user>\local\<project-folder>
 
 WSL view:
 
-    /mnt/c/Users/secki/local/research-cloud-platform
+    <project-root>
 
 This project previously used the WSL-native Linux filesystem. It was moved to a
 single Windows-local location to make the repository easier to locate and manage
@@ -43,16 +43,16 @@ The canonical Git checkout and source tree live at:
 
 Windows:
 
-    C:\Users\secki\local\research-cloud-platform
+    C:\Users\<windows-user>\local\<project-folder>
 
 WSL:
 
-    /mnt/c/Users/secki/local/research-cloud-platform
+    <project-root>
 
 Performance-sensitive execution state is kept separately in the WSL-native
 Linux filesystem:
 
-    /home/seckinozbek/research-cloud-runtime
+    <runtime-root>
 
 This directory is not a second Git checkout.
 
@@ -76,7 +76,7 @@ treated as separate architectural decisions.
 
 Enter the configured local runtime with:
 
-    cd /mnt/c/Users/secki/local/research-cloud-platform
+    cd <project-root>
     bash scripts/enter_runtime.sh
 
 The project began as a local data and API platform and progressively expanded
@@ -206,17 +206,17 @@ Do not place GitHub private keys or other credentials in this repository.
 On the primary development workstation, clone into the canonical local
 directory:
 
-    mkdir -p /mnt/c/Users/secki/local
+    mkdir -p /mnt/c/Users/<windows-user>/local
 
     git clone \
       git@github.com:seckinozbek1/research-cloud-platform.git \
-      /mnt/c/Users/secki/local/research-cloud-platform
+      <project-root>
 
-    cd /mnt/c/Users/secki/local/research-cloud-platform
+    cd <project-root>
 
 On Windows, the same directory is:
 
-    C:\Users\secki\local\research-cloud-platform
+    C:\Users\<windows-user>\local\<project-folder>
 
 Use the repository's default branch for the stable version of the platform.
 
@@ -888,7 +888,7 @@ The design goal is that the user should not have to manually remember which term
 
 Start:
 
-    cd /mnt/c/Users/secki/local/research-cloud-platform
+    cd <project-root>
     ./scripts/start_local_lab.sh
 
 The script performs the local operational startup, including:
@@ -1840,14 +1840,14 @@ The development workflow intentionally uses two terminals.
 
 Used for Git, Python, tests, agent interaction and normal repository work:
 
-    cd /mnt/c/Users/secki/local/research-cloud-platform
+    cd <project-root>
     bash scripts/enter_runtime.sh
 
 **DEVOPS QWEN**
 
 Used only for the local Qwen inference server and its GPU/runtime logs:
 
-    cd /mnt/c/Users/secki/local/research-cloud-platform
+    cd <project-root>
     bash scripts/start_qwen_server.sh
 
 The model server binds to `127.0.0.1:8080` and is not intentionally exposed to
@@ -1859,3 +1859,33 @@ runtime filesystem. The default model is Qwen3-8B GGUF Q4_K_M.
 This split keeps source control and agent development independent from the
 long-running local inference process and makes model crashes, agent exceptions,
 GPU usage and server logs easier to isolate.
+
+### Portable runtime activation
+
+The repository does not require a specific username, home directory, drive,
+or installation path.
+
+Activate an existing runtime in the current shell with:
+
+    source scripts/enter_runtime.sh
+
+Runtime resolution follows this order:
+
+1. `RESEARCH_CLOUD_RUNTIME`
+2. an existing `~/research-cloud-runtime` legacy development runtime
+3. the operating system's per-user application-data location
+
+Additional installation-specific overrides are available through:
+
+- `RESEARCH_CLOUD_PROJECT_ROOT`
+- `RESEARCH_CLOUD_RUNTIME`
+- `RESEARCH_CLOUD_VENV`
+- `RESEARCH_CLOUD_MANAGED_ROOT`
+- `RESEARCH_CLOUD_MODEL_CACHE`
+- `LLAMA_BIN`
+- `QWEN_MODEL`
+- `QWEN_HOST`
+- `QWEN_PORT`
+- `QWEN_CONTEXT_SIZE`
+
+Machine-specific paths are configuration, not application logic.
