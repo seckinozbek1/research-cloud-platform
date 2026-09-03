@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
@@ -61,6 +63,13 @@ class ExecutePayload(BaseModel):
     )
 
 
+
+def _demo_mode() -> bool:
+    return os.getenv("OPERATIONS_DEMO_MODE", "").strip().lower() in {
+        "1", "true", "yes", "on"
+    }
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -103,6 +112,12 @@ def chat_message(
 def chat_approve(
     payload: ChatApprovalPayload,
 ) -> dict[str, Any]:
+    if _demo_mode():
+        raise HTTPException(
+            status_code=403,
+            detail="Execution is disabled in demo mode.",
+        )
+
     return approve_chat_action(
         payload.session_id,
         payload.approval_id,
@@ -124,6 +139,12 @@ def analyse(
 def execute_plan(
     payload: ExecutePayload,
 ) -> dict[str, Any]:
+    if _demo_mode():
+        raise HTTPException(
+            status_code=403,
+            detail="Execution is disabled in demo mode.",
+        )
+
     result = execute_approved_plan(
         payload.approval_id
     )

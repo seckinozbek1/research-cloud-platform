@@ -33,6 +33,12 @@ MAX_HISTORY = 16
 _qwen = qwen_chat
 
 
+def _demo_mode() -> bool:
+    return os.getenv("OPERATIONS_DEMO_MODE", "").strip().lower() in {
+        "1", "true", "yes", "on"
+    }
+
+
 def _normalise_project_location(value: str) -> Path:
     value = value.strip().strip('"').strip("'")
 
@@ -370,6 +376,15 @@ def handle_chat_message(
     )
 
     if requested_root is not None:
+        if _demo_mode():
+            return {
+                "session_id": session_id,
+                "kind": "error",
+                "message": (
+                    "Project-location changes are disabled in demo mode."
+                ),
+            }
+
         if not requested_root.exists():
             return {
                 "session_id": session_id,
@@ -519,6 +534,26 @@ def handle_chat_message(
         "user",
         cleaned,
     )
+
+    if route == "OPERATION" and _demo_mode():
+        reply = (
+            "Execution is disabled in demo mode. "
+            "I can still explain, inspect the shared project, "
+            "and describe what an operation would require."
+        )
+
+        _append(
+            session_id,
+            "assistant",
+            reply,
+        )
+
+        return {
+            "session_id": session_id,
+            "kind": "chat",
+            "message": reply,
+            "demo_mode": True,
+        }
 
     if route == "CHAT":
         reply = _chat_reply(
